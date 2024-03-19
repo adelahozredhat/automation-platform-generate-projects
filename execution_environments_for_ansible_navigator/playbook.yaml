@@ -1,0 +1,58 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vault.yaml
+  vars:
+    name_image_ee: "ee_controller_configuration"
+  tasks:
+
+    - name: Login to quay.io and create ${XDG_RUNTIME_DIR}/containers/auth.json
+      containers.podman.podman_login:
+        username: "{{registry_user}}"
+        password: "{{registry_password}}"
+        registry: "{{registry_url}}"
+
+    - name: Generate image execution environment with ansible-builder
+      ansible.builtin.shell: 
+        cmd: "ansible-builder build --container-runtime podman -t {{name_image_ee}}:latest"
+        chdir: "{{name_image_ee}}/"
+
+    - name: Build and push an image using username and password
+      containers.podman.podman_image:
+        name: "{{name_image_ee}}:latest"
+        push: true
+        username: "{{registry_user}}"
+        password: "{{ registry_password }}"
+        push_args:
+          dest: quay.io/adelahoz
+
+- hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vault.yaml
+  vars:
+    name_image_ee: "ee_utilities"
+  tasks:
+
+    - name: Login to quay.io and create ${XDG_RUNTIME_DIR}/containers/auth.json
+      containers.podman.podman_login:
+        username: "{{registry_user}}"
+        password: "{{registry_password}}"
+        registry: "{{registry_url}}"
+
+    - name: Generate image execution environment with ansible-builder
+      ansible.builtin.shell: 
+        cmd: "ansible-builder build --container-runtime podman -t {{name_image_ee}}:latest"
+        chdir: "{{name_image_ee}}/"
+
+    - name: Build and push an image using username and password
+      containers.podman.podman_image:
+        name: "{{name_image_ee}}:latest"
+        push: true
+        username: "{{registry_user}}"
+        password: "{{ registry_password }}"
+        push_args:
+          dest: quay.io/adelahoz
+
+...

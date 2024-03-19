@@ -1,0 +1,15 @@
+networking_f5_bigip
+
+ansible==2.9.25
+certifi==2021.10.8
+cffi==1.15.0
+charset-normalizer==2.0.7
+cryptography==35.0.0
+idna==3.3
+Jinja2==3.0.2
+MarkupSafe==2.0.1
+psutil==5.8.0
+pycparser==2.20
+PyYAML==6.0
+requests==2.26.0
+urllib3==1.26.7
