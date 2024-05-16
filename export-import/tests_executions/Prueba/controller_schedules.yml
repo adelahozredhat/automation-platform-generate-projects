@@ -1,0 +1,55 @@
+controller_schedules:
+- description: every day for 1 time
+  diff_mode: ''
+  enabled: true
+  inventory:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: inventory
+  name: Prueba2
+  natural_key:
+    name: Prueba2
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  related:
+    name: Prueba2
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  rrule: DTSTART;TZID=Europe/Berlin:20240510T000000 RRULE:FREQ=DAILY;INTERVAL=1;COUNT=1
+  unified_job_template:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: job_template
+- description: every day
+  diff_mode: ''
+  enabled: true
+  inventory:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: inventory
+  name: Prueba
+  natural_key:
+    name: Prueba
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  related:
+    name: Prueba
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  rrule: DTSTART;TZID=Europe/Berlin:20240510T000000 RRULE:FREQ=DAILY;INTERVAL=1
+  unified_job_template:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: job_template

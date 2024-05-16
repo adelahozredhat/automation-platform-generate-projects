@@ -1,0 +1,12 @@
+controller_organizations:
+- description: ''
+  max_hosts: 0
+  name: Prueba
+  natural_key: {name: Prueba, type: organization}
+  related:
+    galaxy_credentials: []
+    notification_templates: []
+    notification_templates_approvals: []
+    notification_templates_error: []
+    notification_templates_started: []
+    notification_templates_success: []

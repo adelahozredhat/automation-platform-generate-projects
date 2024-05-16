@@ -1,6 +1,5 @@
 controller_organizations:
-- default_environment: ee_example
-  description: ''
+- description: ''
   max_hosts: 0
   name: Prueba
   natural_key: {name: Prueba, type: organization}

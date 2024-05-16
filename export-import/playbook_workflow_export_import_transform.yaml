@@ -1,0 +1,78 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    list_workflows_execute:
+      - name: "Prueba_Workflow"
+        organization: "Prueba"
+    folder_project_export_dest: "tests_executions/Prueba_Workflow"
+    vault_file: "../../../.vault_password"
+  vars_files:
+    - vault.yaml
+  tasks:
+
+    - set_fact: 
+        list_jobs_templates: []
+        list_workflows: "{{list_workflows_execute}}"
+
+    - name: Queue build of a project in Jenkins
+      ansible.builtin.uri:
+        url: "http://{{ controller_hostname_old }}/api/v2/"
+        user: "{{ controller_username_old }}"
+        password: "{{ controller_password_old }}"
+        method: GET
+        force_basic_auth: true
+        validate_certs: "{{controller_validate_certs_old}}"
+      register: controller_metrics
+
+    - debug:
+        msg: "{{controller_metrics}}"
+
+    - name: Creates directory
+      ansible.builtin.file:
+        path: "{{folder_project_export_dest}}"
+        state: directory
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_workflow
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_job_template
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_projects   
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_inventories  
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_credentials 
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_organizations 
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_schedulers 
+
+- name: Mix with repo
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vault.yaml
+  vars:
+    folder_project_export_dest: "tests_executions/Prueba_Workflow"
+    vault_file: "../../../.vault_password"
+
+  roles:
+    - {role: update_iasc_to_repository}
+
+
+    
+...

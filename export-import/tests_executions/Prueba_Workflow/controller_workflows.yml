@@ -1,0 +1,372 @@
+controller_workflows:
+- allow_simultaneous: false
+  ask_inventory_on_launch: false
+  ask_limit_on_launch: false
+  ask_scm_branch_on_launch: false
+  ask_variables_on_launch: false
+  description: ''
+  extra_vars: ''
+  inventory: null
+  limit: null
+  name: Prueba_Workflow
+  natural_key: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+  organization: null
+  related:
+    labels: []
+    notification_templates_approvals: []
+    notification_templates_error: []
+    notification_templates_started: []
+    notification_templates_success: []
+    schedules: []
+    survey_spec: {}
+    workflow_nodes:
+    - all_parents_must_converge: false
+      diff_mode: null
+      extra_data: {}
+      identifier: 55287df8-00fd-4868-a2d8-f9c2c6f517ea
+      inventory: null
+      job_tags: null
+      job_type: null
+      limit: null
+      natural_key:
+        identifier: 55287df8-00fd-4868-a2d8-f9c2c6f517ea
+        type: workflow_job_template_node
+        workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      related:
+        always_nodes: []
+        credentials: []
+        failure_nodes: []
+        success_nodes:
+        - identifier: 8f276fcd-726c-4a4f-8007-25b33800cb51
+          type: workflow_job_template_node
+          workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      scm_branch: null
+      skip_tags: null
+      unified_job_template:
+        name: Prueba
+        organization: {name: Prueba, type: organization}
+        type: job_template
+      verbosity: null
+      workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+    - all_parents_must_converge: false
+      diff_mode: null
+      extra_data: {}
+      identifier: e71805b8-2809-4888-9ead-f944dea7b931
+      inventory: null
+      job_tags: null
+      job_type: null
+      limit: null
+      natural_key:
+        identifier: e71805b8-2809-4888-9ead-f944dea7b931
+        type: workflow_job_template_node
+        workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      related:
+        always_nodes: []
+        credentials: []
+        failure_nodes: []
+        success_nodes:
+        - identifier: 420c199d-3fa7-4e91-a731-072e8401106c
+          type: workflow_job_template_node
+          workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+        - identifier: ef569983-2e62-40af-91a7-e2364156e069
+          type: workflow_job_template_node
+          workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      scm_branch: null
+      skip_tags: null
+      unified_job_template:
+        name: Demo Job Template
+        organization: {name: Default, type: organization}
+        type: job_template
+      verbosity: null
+      workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+    - all_parents_must_converge: false
+      diff_mode: null
+      extra_data: {}
+      identifier: ef569983-2e62-40af-91a7-e2364156e069
+      inventory: null
+      job_tags: null
+      job_type: null
+      limit: null
+      natural_key:
+        identifier: ef569983-2e62-40af-91a7-e2364156e069
+        type: workflow_job_template_node
+        workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      related:
+        always_nodes: []
+        credentials: []
+        failure_nodes:
+        - identifier: 4fc834c5-1d98-4a84-8d38-38602bd129e7
+          type: workflow_job_template_node
+          workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+        success_nodes: []
+      scm_branch: null
+      skip_tags: null
+      unified_job_template:
+        name: Prueba
+        organization: {name: Prueba, type: organization}
+        type: job_template
+      verbosity: null
+      workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+    - all_parents_must_converge: false
+      diff_mode: null
+      extra_data: {}
+      identifier: 420c199d-3fa7-4e91-a731-072e8401106c
+      inventory: null
+      job_tags: null
+      job_type: null
+      limit: null
+      natural_key:
+        identifier: 420c199d-3fa7-4e91-a731-072e8401106c
+        type: workflow_job_template_node
+        workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      related:
+        always_nodes:
+        - identifier: 55287df8-00fd-4868-a2d8-f9c2c6f517ea
+          type: workflow_job_template_node
+          workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+        credentials: []
+        failure_nodes: []
+        success_nodes: []
+      scm_branch: null
+      skip_tags: null
+      unified_job_template:
+        name: Demo Job Template
+        organization: {name: Default, type: organization}
+        type: job_template
+      verbosity: null
+      workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+    - all_parents_must_converge: false
+      diff_mode: null
+      extra_data: {}
+      identifier: 4fc834c5-1d98-4a84-8d38-38602bd129e7
+      inventory: null
+      job_tags: null
+      job_type: null
+      limit: null
+      natural_key:
+        identifier: 4fc834c5-1d98-4a84-8d38-38602bd129e7
+        type: workflow_job_template_node
+        workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      related:
+        always_nodes: []
+        credentials: []
+        failure_nodes: []
+        success_nodes:
+        - identifier: d904bba7-ae9e-479d-9cef-67db5c773320
+          type: workflow_job_template_node
+          workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      scm_branch: null
+      skip_tags: null
+      unified_job_template:
+        name: Demo Job Template
+        organization: {name: Default, type: organization}
+        type: job_template
+      verbosity: null
+      workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+    - all_parents_must_converge: true
+      diff_mode: null
+      extra_data: {}
+      identifier: d904bba7-ae9e-479d-9cef-67db5c773320
+      inventory: null
+      job_tags: null
+      job_type: null
+      limit: null
+      natural_key:
+        identifier: d904bba7-ae9e-479d-9cef-67db5c773320
+        type: workflow_job_template_node
+        workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      related:
+        always_nodes:
+        - identifier: 55287df8-00fd-4868-a2d8-f9c2c6f517ea
+          type: workflow_job_template_node
+          workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+        credentials: []
+        failure_nodes: []
+        success_nodes: []
+      scm_branch: null
+      skip_tags: null
+      unified_job_template:
+        name: Prueba
+        organization: {name: Prueba, type: organization}
+        type: job_template
+      verbosity: null
+      workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+    - all_parents_must_converge: false
+      diff_mode: null
+      extra_data: {}
+      identifier: 8f276fcd-726c-4a4f-8007-25b33800cb51
+      inventory: null
+      job_tags: null
+      job_type: null
+      limit: null
+      natural_key:
+        identifier: 8f276fcd-726c-4a4f-8007-25b33800cb51
+        type: workflow_job_template_node
+        workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      related:
+        always_nodes: []
+        credentials: []
+        failure_nodes: []
+        success_nodes:
+        - identifier: 201428e6-047f-4d41-a0e0-b66a51df51d5
+          type: workflow_job_template_node
+          workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      scm_branch: null
+      skip_tags: null
+      unified_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      verbosity: null
+      workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+    - all_parents_must_converge: false
+      diff_mode: null
+      extra_data: {}
+      identifier: 201428e6-047f-4d41-a0e0-b66a51df51d5
+      inventory: null
+      job_tags: null
+      job_type: null
+      limit: null
+      natural_key:
+        identifier: 201428e6-047f-4d41-a0e0-b66a51df51d5
+        type: workflow_job_template_node
+        workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      related:
+        always_nodes: []
+        credentials: []
+        failure_nodes: []
+        success_nodes:
+        - identifier: b63ae847-4cbc-4bab-b865-d372d43eb51c
+          type: workflow_job_template_node
+          workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      scm_branch: null
+      skip_tags: null
+      unified_job_template: {name: Prueba, organization: null, type: workflow_job_template}
+      verbosity: null
+      workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+    - all_parents_must_converge: false
+      diff_mode: null
+      extra_data: {}
+      identifier: b63ae847-4cbc-4bab-b865-d372d43eb51c
+      inventory: null
+      job_tags: null
+      job_type: null
+      limit: null
+      natural_key:
+        identifier: b63ae847-4cbc-4bab-b865-d372d43eb51c
+        type: workflow_job_template_node
+        workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      related:
+        always_nodes: []
+        credentials: []
+        failure_nodes: []
+        success_nodes: []
+      scm_branch: null
+      skip_tags: null
+      unified_job_template:
+        name: Prueba
+        organization: {name: Default, type: organization}
+        type: job_template
+      verbosity: null
+      workflow_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+  scm_branch: null
+  survey_enabled: false
+  webhook_credential: null
+  webhook_service: ''
+- allow_simultaneous: false
+  ask_inventory_on_launch: false
+  ask_limit_on_launch: false
+  ask_scm_branch_on_launch: false
+  ask_variables_on_launch: false
+  description: ''
+  extra_vars: ''
+  inventory: null
+  limit: null
+  name: Prueba
+  natural_key: {name: Prueba, organization: null, type: workflow_job_template}
+  organization: null
+  related:
+    labels: []
+    notification_templates_approvals: []
+    notification_templates_error: []
+    notification_templates_started: []
+    notification_templates_success: []
+    schedules: []
+    survey_spec: {}
+    workflow_nodes:
+    - all_parents_must_converge: false
+      diff_mode: null
+      extra_data: {}
+      identifier: 9a3620b1-9cc7-46ae-9585-13af816c1934
+      inventory: null
+      job_tags: null
+      job_type: null
+      limit: null
+      natural_key:
+        identifier: 9a3620b1-9cc7-46ae-9585-13af816c1934
+        type: workflow_job_template_node
+        workflow_job_template: {name: Prueba, organization: null, type: workflow_job_template}
+      related:
+        always_nodes: []
+        credentials: []
+        failure_nodes: []
+        success_nodes:
+        - identifier: 055d8a20-dbb8-40a3-8d83-0e2f97db88dd
+          type: workflow_job_template_node
+          workflow_job_template: {name: Prueba, organization: null, type: workflow_job_template}
+      scm_branch: null
+      skip_tags: null
+      unified_job_template: {name: Prueba_Workflow, organization: null, type: workflow_job_template}
+      verbosity: null
+      workflow_job_template: {name: Prueba, organization: null, type: workflow_job_template}
+    - all_parents_must_converge: false
+      diff_mode: null
+      extra_data: {}
+      identifier: 055d8a20-dbb8-40a3-8d83-0e2f97db88dd
+      inventory: null
+      job_tags: null
+      job_type: null
+      limit: null
+      natural_key:
+        identifier: 055d8a20-dbb8-40a3-8d83-0e2f97db88dd
+        type: workflow_job_template_node
+        workflow_job_template: {name: Prueba, organization: null, type: workflow_job_template}
+      related:
+        always_nodes: []
+        credentials: []
+        failure_nodes: []
+        success_nodes: []
+      scm_branch: null
+      skip_tags: null
+      unified_job_template:
+        name: Demo Job Template
+        organization: {name: Default, type: organization}
+        type: job_template
+      verbosity: null
+      workflow_job_template: {name: Prueba, organization: null, type: workflow_job_template}
+    - all_parents_must_converge: false
+      diff_mode: null
+      extra_data: {}
+      identifier: fe1816f0-4976-4d0f-becd-1e5208eea4b8
+      inventory: null
+      job_tags: null
+      job_type: null
+      limit: null
+      natural_key:
+        identifier: fe1816f0-4976-4d0f-becd-1e5208eea4b8
+        type: workflow_job_template_node
+        workflow_job_template: {name: Prueba, organization: null, type: workflow_job_template}
+      related:
+        always_nodes: []
+        credentials: []
+        failure_nodes: []
+        success_nodes:
+        - identifier: 9a3620b1-9cc7-46ae-9585-13af816c1934
+          type: workflow_job_template_node
+          workflow_job_template: {name: Prueba, organization: null, type: workflow_job_template}
+      scm_branch: null
+      skip_tags: null
+      unified_job_template: {name: Prueba, organization: null, type: workflow_job_template}
+      verbosity: null
+      workflow_job_template: {name: Prueba, organization: null, type: workflow_job_template}
+  scm_branch: null
+  survey_enabled: false
+  webhook_credential: null
+  webhook_service: ''

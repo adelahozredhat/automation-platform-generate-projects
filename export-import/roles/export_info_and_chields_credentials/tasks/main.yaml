@@ -1,0 +1,132 @@
+- set_fact:
+    export_output_credentials: []
+    export_output_credentials_aux2: []
+    credentials_list: |-
+      [
+      {% for jobtemplates in export_job_templates_output %}
+        {% for credential_list in jobtemplates.related.credentials %}
+          {%- if credential_list.name != "Demo Credential" -%}
+          {
+          "name": "{{credential_list.name}}",
+          "organization": "{{credential_list.organization.name}}"
+          },
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+      {% for projects in export_output_projects %}
+          {%- if projects.credential -%}
+          {
+          "name": "{{credential_list.name}}",
+          "organization": "{{credential_list.organization.name}}"
+          },
+          {% endif %}
+        {% endfor %}
+      ]
+
+- debug:
+    msg: "{{credentials_list}}"
+
+- block:
+    
+  - name: Export credentials tower
+    awx.awx.export:
+      credentials: "{{ item.name }}"
+      controller_host: "{{ controller_hostname_old }}"
+      controller_username: "{{ controller_username_old }}"
+      controller_password: "{{ controller_password_old }}"
+      validate_certs: "{{ controller_validate_certs_old }}"
+    register: export_output_credentials_aux
+    loop: "{{credentials_list}}"
+
+  - debug:
+      msg: "{{export_output_credentials_aux}}"
+
+  - set_fact:
+      export_output_credentials_aux2: "{{export_output_credentials_aux2|union(item.assets.credentials)}}"
+    loop: "{{export_output_credentials_aux.results}}"
+
+  - debug:
+      msg: "{{export_output_credentials_aux2}}"
+
+  - set_fact:
+      export_output_credentials: "{{export_output_credentials|union(export_output_credentials_aux2|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
+    loop: "{{credentials_list}}"
+
+  - debug:
+      msg: "{{export_output_credentials}}"
+
+
+  - set_fact:
+      controller_credentials_content: |-
+        {"controller_credentials":
+          [
+          {% for credential in export_output_credentials %}
+            {
+            "name": "{{credential.name}}",
+            "credential_type": "{{credential.credential_type.name}}",
+            "description": "{{credential.description}}",
+            "inputs": {{credential.inputs|replace("$encrypted$","")}},
+            "organization": "{{credential.organization.name}}"
+            },
+          {% endfor %}
+          ]
+        }
+
+  - debug:
+      msg: "{{controller_credentials_content}}"
+
+  - set_fact:
+      controller_credentials: "{{controller_credentials_content.controller_credentials}}"
+
+  - debug:
+      msg: "{{controller_credentials}}"
+
+  - copy: content="{{ controller_credentials_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_credentials.yml"
+
+  - name: Generate image execution environment with ansible-builder
+    ansible.builtin.shell: 
+      cmd: "ansible-vault encrypt {{folder_project_export_dest}}/controller_credentials.yml --vault-password-file {{vault_file}}"
+      
+  - name: Export credential_types tower
+    awx.awx.export:
+      credential_types: "{{ item.credential_type.name }}"
+      controller_host: "{{ controller_hostname_old }}"
+      controller_username: "{{ controller_username_old }}"
+      controller_password: "{{ controller_password_old }}"
+      validate_certs: "{{ controller_validate_certs_old }}"
+    register: export_output_credential_types
+    loop: "{{export_output_credentials}}"
+
+  - set_fact:
+      controller_credential_types_content: |-
+        {"controller_credential_types":
+          [
+          {% for result in export_output_credential_types.results %}
+            {% for credential_type in result.assets.credential_types %}
+              {%- if credential_type.name != "Machine" and credential_type.name != "Source Control" -%}
+              {
+              "description": "{{credential_type.description}}",
+              "injectors": {{credential_type.injectors}},
+              "inputs": {{credential_type.inputs}},
+              "kind": "{{credential_type.kind}}",
+              "name": "{{credential_type.name}}",
+              },
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+          ]
+        }
+
+  - debug:
+      msg: "{{controller_credential_types_content}}"
+
+  - set_fact:
+      controller_credential_types: "{{controller_credential_types_content.controller_credential_types}}"
+
+  - debug:
+      msg: "{{controller_credential_types}}"
+
+  - copy: content="{{ controller_credential_types_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_credential_types.yml"
+
+
+  when: credentials_list|length>0

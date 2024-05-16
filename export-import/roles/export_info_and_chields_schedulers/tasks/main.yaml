@@ -1,0 +1,74 @@
+- name: Export Scheduler tower
+  awx.awx.export:
+    schedules: "{{ item | community.general.json_query('related.schedules[*].name')}}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_output_scheduler
+  loop: "{{export_job_templates_output}}"
+
+
+
+- debug:
+    msg: "{{export_output_scheduler}}"
+
+- set_fact:
+    controller_schedules_content: |-
+      {"controller_schedules":
+        [
+        {% for results in export_output_scheduler.results %}
+          {% for schedule in results.assets.schedules %}
+            {
+            "description": "{{schedule.description}}",
+            "diff_mode": "{{schedule.diff_mode}}",
+            "enabled": {{schedule.enabled}},
+            {%- if schedule.extra_data | from_yaml -%}
+            "extra_data": {{schedule.extra_data| from_yaml }},
+            {% endif %}
+            {%- if schedule.inventory -%}
+            "inventory": {{schedule.inventory}},
+            {% endif %}
+            {%- if schedule.job_tags-%}
+            "job_tags": {{schedule.job_tags}},
+            {% endif %}
+            {%- if schedule.job_type-%}
+            "job_type": {{schedule.job_type}},
+            {% endif %}
+            {%- if schedule.limit-%}
+            "limit": {{schedule.limit}},
+            {% endif %}
+            "name": "{{schedule.name}}",
+            "natural_key": {{schedule.natural_key}},
+            "related": {{schedule.natural_key}},
+            "rrule": "{{schedule.rrule}}",
+            {%- if schedule.scm_branch-%}
+            "scm_branch": {{schedule.scm_branch}},
+            {% endif %}
+            {%- if schedule.skip_tags-%}
+            "skip_tags": {{schedule.skip_tags}},
+            {% endif %}
+            "unified_job_template": {{schedule.unified_job_template}},
+            {%- if schedule.verbosity-%}
+            "verbosity": {{schedule.verbosity}}
+            {% endif %}
+            },
+          {% endfor %}
+        {% endfor %}
+        ]
+      }
+
+- debug:
+    msg: "{{controller_schedules_content}}"
+
+- block:
+
+  - set_fact:
+      controller_schedules: "{{controller_schedules_content.controller_schedules}}"
+
+  - debug:
+      msg: "{{controller_schedules}}"
+
+  - copy: content="{{ controller_schedules_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_schedules.yml"
+
+  when: controller_schedules_content.controller_schedules|length>0

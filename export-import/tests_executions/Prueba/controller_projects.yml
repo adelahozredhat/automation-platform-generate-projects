@@ -1,0 +1,15 @@
+controller_projects:
+- allow_override: false
+  description: Prueba
+  local_path: _8__prueba
+  name: Prueba
+  organization: {name: Prueba, type: organization}
+  scm_branch: ''
+  scm_clean: false
+  scm_delete_on_update: false
+  scm_refspec: ''
+  scm_type: git
+  scm_update_cache_timeout: 0
+  scm_update_on_launch: true
+  scm_url: https://github.com/ansible/ansible-tower-samples
+  timeout: 0

@@ -1,0 +1,45 @@
+- name: Export workflow tower
+  awx.awx.export:
+    workflow_job_templates: "{{list_workflows_execute| community.general.json_query('[*].name')}}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_workflow_output
+
+- debug:
+    msg: "{{export_workflow_output}}"
+
+- set_fact:
+    controller_workflows_content:
+      controller_workflows: "{{controller_workflows_content.controller_workflows| union(export_workflow_output.assets.workflow_job_templates)}}"
+    controller_workflows: "{{export_workflow_output.assets.workflow_job_templates}}"
+
+- debug:
+    msg: "{{controller_workflows}}"
+
+- set_fact: 
+    list_jobs_templates_execute: "{{ list_jobs_templates_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization.name, type: type}')| community.general.json_query('[0][?starts_with(type,`job_template`)].{name: name, organization: organization}'))}}"
+    unified_workflow_job_template: "{{ controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization, type: type}')| community.general.json_query('[0][?starts_with(type,`workflow_job_template`)].{name: name, organization: organization}')| difference(list_workflows) }}"
+
+- debug:
+    msg: "{{list_jobs_templates_execute}}"    
+
+- debug:
+    msg: "{{unified_workflow_job_template}}"
+
+- set_fact: 
+    list_workflows: "{{ list_workflows | union(unified_workflow_job_template) }}"
+
+- debug:
+    msg: "{{list_workflows}}"
+
+- set_fact: 
+    list_workflows_execute: "{{ unified_workflow_job_template}}"
+
+- debug:
+    msg: "{{list_workflows_execute}}"
+
+- name: call the slave playbook
+  include_tasks: export_info_and_iasc_workflow.yaml
+  when: list_workflows_execute|length>0

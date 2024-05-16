@@ -1,0 +1,279 @@
+controller_schedules:
+- description: every day for 1 time
+  diff_mode: ''
+  enabled: true
+  inventory:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: inventory
+  name: Prueba2
+  natural_key:
+    name: Prueba2
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  related:
+    name: Prueba2
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  rrule: DTSTART;TZID=Europe/Berlin:20240510T000000 RRULE:FREQ=DAILY;INTERVAL=1;COUNT=1
+  unified_job_template:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: job_template
+- description: every day
+  diff_mode: ''
+  enabled: true
+  inventory:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: inventory
+  name: Prueba
+  natural_key:
+    name: Prueba
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  related:
+    name: Prueba
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  rrule: DTSTART;TZID=Europe/Berlin:20240510T000000 RRULE:FREQ=DAILY;INTERVAL=1
+  unified_job_template:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: job_template
+- description: every day for 1 time
+  diff_mode: ''
+  enabled: true
+  inventory:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: inventory
+  name: Prueba2
+  natural_key:
+    name: Prueba2
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  related:
+    name: Prueba2
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  rrule: DTSTART;TZID=Europe/Berlin:20240510T000000 RRULE:FREQ=DAILY;INTERVAL=1;COUNT=1
+  unified_job_template:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: job_template
+- description: Cleans out expired browser sessions
+  diff_mode: ''
+  enabled: true
+  name: Cleanup Expired Sessions
+  natural_key:
+    name: Cleanup Expired Sessions
+    type: schedule
+    unified_job_template: {name: Cleanup Expired Sessions, type: system_job_template}
+  related:
+    name: Cleanup Expired Sessions
+    type: schedule
+    unified_job_template: {name: Cleanup Expired Sessions, type: system_job_template}
+  rrule: DTSTART:20240506T085308Z RRULE:FREQ=WEEKLY;INTERVAL=1;COUNT=1
+  unified_job_template: {name: Cleanup Expired Sessions, type: system_job_template}
+- description: Removes expired OAuth 2 access and refresh tokens
+  diff_mode: ''
+  enabled: true
+  name: Cleanup Expired OAuth 2 Tokens
+  natural_key:
+    name: Cleanup Expired OAuth 2 Tokens
+    type: schedule
+    unified_job_template: {name: Cleanup Expired OAuth 2 Tokens, type: system_job_template}
+  related:
+    name: Cleanup Expired OAuth 2 Tokens
+    type: schedule
+    unified_job_template: {name: Cleanup Expired OAuth 2 Tokens, type: system_job_template}
+  rrule: DTSTART:20240506T085308Z RRULE:FREQ=WEEKLY;INTERVAL=1;COUNT=1
+  unified_job_template: {name: Cleanup Expired OAuth 2 Tokens, type: system_job_template}
+- description: Automatically Generated Schedule
+  diff_mode: ''
+  enabled: true
+  extra_data: {days: '355'}
+  name: Cleanup Activity Schedule
+  natural_key:
+    name: Cleanup Activity Schedule
+    type: schedule
+    unified_job_template: {name: Cleanup Activity Stream, type: system_job_template}
+  related:
+    name: Cleanup Activity Schedule
+    type: schedule
+    unified_job_template: {name: Cleanup Activity Stream, type: system_job_template}
+  rrule: DTSTART:20240506T085116Z RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=TU
+  unified_job_template: {name: Cleanup Activity Stream, type: system_job_template}
+- description: Automatically Generated Schedule
+  diff_mode: ''
+  enabled: true
+  extra_data: {days: '120'}
+  name: Cleanup Job Schedule
+  natural_key:
+    name: Cleanup Job Schedule
+    type: schedule
+    unified_job_template: {name: Cleanup Job Details, type: system_job_template}
+  related:
+    name: Cleanup Job Schedule
+    type: schedule
+    unified_job_template: {name: Cleanup Job Details, type: system_job_template}
+  rrule: DTSTART:20240506T085116Z RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=SU
+  unified_job_template: {name: Cleanup Job Details, type: system_job_template}
+- description: every day
+  diff_mode: ''
+  enabled: true
+  inventory:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: inventory
+  name: Prueba
+  natural_key:
+    name: Prueba
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  related:
+    name: Prueba
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  rrule: DTSTART;TZID=Europe/Berlin:20240510T000000 RRULE:FREQ=DAILY;INTERVAL=1
+  unified_job_template:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: job_template
+- description: every day for 1 time
+  diff_mode: ''
+  enabled: true
+  inventory:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: inventory
+  name: Prueba2
+  natural_key:
+    name: Prueba2
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  related:
+    name: Prueba2
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  rrule: DTSTART;TZID=Europe/Berlin:20240510T000000 RRULE:FREQ=DAILY;INTERVAL=1;COUNT=1
+  unified_job_template:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: job_template
+- description: Cleans out expired browser sessions
+  diff_mode: ''
+  enabled: true
+  name: Cleanup Expired Sessions
+  natural_key:
+    name: Cleanup Expired Sessions
+    type: schedule
+    unified_job_template: {name: Cleanup Expired Sessions, type: system_job_template}
+  related:
+    name: Cleanup Expired Sessions
+    type: schedule
+    unified_job_template: {name: Cleanup Expired Sessions, type: system_job_template}
+  rrule: DTSTART:20240506T085308Z RRULE:FREQ=WEEKLY;INTERVAL=1;COUNT=1
+  unified_job_template: {name: Cleanup Expired Sessions, type: system_job_template}
+- description: Removes expired OAuth 2 access and refresh tokens
+  diff_mode: ''
+  enabled: true
+  name: Cleanup Expired OAuth 2 Tokens
+  natural_key:
+    name: Cleanup Expired OAuth 2 Tokens
+    type: schedule
+    unified_job_template: {name: Cleanup Expired OAuth 2 Tokens, type: system_job_template}
+  related:
+    name: Cleanup Expired OAuth 2 Tokens
+    type: schedule
+    unified_job_template: {name: Cleanup Expired OAuth 2 Tokens, type: system_job_template}
+  rrule: DTSTART:20240506T085308Z RRULE:FREQ=WEEKLY;INTERVAL=1;COUNT=1
+  unified_job_template: {name: Cleanup Expired OAuth 2 Tokens, type: system_job_template}
+- description: Automatically Generated Schedule
+  diff_mode: ''
+  enabled: true
+  extra_data: {days: '355'}
+  name: Cleanup Activity Schedule
+  natural_key:
+    name: Cleanup Activity Schedule
+    type: schedule
+    unified_job_template: {name: Cleanup Activity Stream, type: system_job_template}
+  related:
+    name: Cleanup Activity Schedule
+    type: schedule
+    unified_job_template: {name: Cleanup Activity Stream, type: system_job_template}
+  rrule: DTSTART:20240506T085116Z RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=TU
+  unified_job_template: {name: Cleanup Activity Stream, type: system_job_template}
+- description: Automatically Generated Schedule
+  diff_mode: ''
+  enabled: true
+  extra_data: {days: '120'}
+  name: Cleanup Job Schedule
+  natural_key:
+    name: Cleanup Job Schedule
+    type: schedule
+    unified_job_template: {name: Cleanup Job Details, type: system_job_template}
+  related:
+    name: Cleanup Job Schedule
+    type: schedule
+    unified_job_template: {name: Cleanup Job Details, type: system_job_template}
+  rrule: DTSTART:20240506T085116Z RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=SU
+  unified_job_template: {name: Cleanup Job Details, type: system_job_template}
+- description: every day
+  diff_mode: ''
+  enabled: true
+  inventory:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: inventory
+  name: Prueba
+  natural_key:
+    name: Prueba
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  related:
+    name: Prueba
+    type: schedule
+    unified_job_template:
+      name: Prueba
+      organization: {name: Prueba, type: organization}
+      type: job_template
+  rrule: DTSTART;TZID=Europe/Berlin:20240510T000000 RRULE:FREQ=DAILY;INTERVAL=1
+  unified_job_template:
+    name: Prueba
+    organization: {name: Prueba, type: organization}
+    type: job_template
