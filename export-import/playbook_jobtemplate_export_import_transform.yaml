@@ -73,7 +73,6 @@
   vars_files:
     - vault.yaml
   vars:
-    job_template_name: "Prueba"
     folder_project_export_dest: "tests_executions/Prueba"
     vault_file: "../../../.vault_password"
 

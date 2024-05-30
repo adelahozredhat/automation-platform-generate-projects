@@ -1,5 +1,0 @@
-controller_inventories:
-- description: ''
-  kind: ''
-  name: Demo Inventory
-  organization: {name: Default, type: organization}
