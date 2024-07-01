@@ -106,7 +106,7 @@
         [
         {% for inventory_source_result in export_output_inventorie_sources_aux_workflow.results %}
           {% for inventory_source_info in inventory_source_result.assets.inventory_sources %}
-          {{inventory_source_info.assets.inventory_sources}},
+          {{inventory_source_info}},
           {% endfor %}
         {% endfor %}
         ]
