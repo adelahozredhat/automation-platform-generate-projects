@@ -10,8 +10,20 @@
     controller_password: "{{ controller_password_old }}"
     validate_certs: "{{ controller_validate_certs_old }}"
   register: export_output_inventories_aux
-  when: item.inventory
+  when: 
+    - item.inventory is defined 
+    - item.inventory
   loop: "{{export_job_templates_output|union(controller_workflows|default([]))}}"
+
+- name: Export inventory tower from workflow
+  awx.awx.export:
+    inventory: "{{ item.name }}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_output_inventories_aux_workflow
+  loop: "{{list_inventories_execute|default([]))}}"
 
 - debug:
     msg: "{{export_output_inventories_aux}}"
@@ -22,14 +34,18 @@
 - set_fact:
     export_output_inventories_aux2: "{{export_output_inventories_aux2|union(item.assets.inventory)}}"
   when: item.assets is defined
-  loop: "{{export_output_inventories_aux.results}}"
+  loop: "{{export_output_inventories_aux.results|union(export_output_inventories_aux_workflow.results)}}"
 
 - debug:
     msg: "{{export_output_inventories_aux2}}"
 
 - set_fact:
     export_output_inventories: "{{export_output_inventories|union(export_output_inventories_aux2|selectattr('name','eq',item.inventory.name)|selectattr('organization.name','eq',item.inventory.organization.name))}}"
-  loop: "{{export_job_templates_output}}"
+  loop: "{{export_job_templates_output|union(controller_workflows|default([]))}}"
+
+- set_fact:
+    export_output_inventories: "{{export_output_inventories|union(export_output_inventories_aux2|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization.name))}}"
+  loop: "{{list_inventories_execute|default([]))}}"
 
 - debug:
     msg: "{{export_output_inventories}}"

@@ -29,17 +29,17 @@
         {% for jobtemplates in export_job_templates_output %}
           {
           "allow_simultaneous": {{jobtemplates.allow_simultaneous}},
-          "ask_credential_on_launch": {{jobtemplates.allow_simultaneous}},
-          "ask_diff_mode_on_launch": {{jobtemplates.allow_simultaneous}},
-          "ask_inventory_on_launch": {{jobtemplates.allow_simultaneous}},
-          "ask_job_type_on_launch": {{jobtemplates.allow_simultaneous}},
-          "ask_limit_on_launch": {{jobtemplates.allow_simultaneous}},
-          "ask_scm_branch_on_launch": {{jobtemplates.allow_simultaneous}},
-          "ask_skip_tags_on_launch": {{jobtemplates.allow_simultaneous}},
-          "ask_tags_on_launch": {{jobtemplates.allow_simultaneous}},
-          "ask_variables_on_launch": {{jobtemplates.allow_simultaneous}},
-          "ask_verbosity_on_launch": {{jobtemplates.allow_simultaneous}},
-          "become_enabled": {{jobtemplates.allow_simultaneous}},
+          "ask_credential_on_launch": {{jobtemplates.ask_credential_on_launch}},
+          "ask_diff_mode_on_launch": {{jobtemplates.ask_diff_mode_on_launch}},
+          "ask_inventory_on_launch": {{jobtemplates.ask_inventory_on_launch}},
+          "ask_job_type_on_launch": {{jobtemplates.ask_job_type_on_launch}},
+          "ask_limit_on_launch": {{jobtemplates.ask_limit_on_launch}},
+          "ask_scm_branch_on_launch": {{jobtemplates.ask_scm_branch_on_launch}},
+          "ask_skip_tags_on_launch": {{jobtemplates.ask_skip_tags_on_launch}},
+          "ask_tags_on_launch": {{jobtemplates.ask_tags_on_launch}},
+          "ask_variables_on_launch": {{jobtemplates.ask_variables_on_launch}},
+          "ask_verbosity_on_launch": {{jobtemplates.ask_verbosity_on_launch}},
+          "become_enabled": {{jobtemplates.become_enabled}},
           {%- if jobtemplates.custom_virtualenv -%}
           "execution_environment": "{{relation_ve_ee[jobtemplates.custom_virtualenv]}}",
           {% endif %}

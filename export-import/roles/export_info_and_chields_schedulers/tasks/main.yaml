@@ -22,7 +22,7 @@
             {
             "description": "{{schedule.description}}",
             "diff_mode": "{{schedule.diff_mode}}",
-            "enabled": {{schedule.enabled}},
+            "enabled": {{schedule.enabled|lower}},
             {%- if schedule.extra_data | from_yaml -%}
             "extra_data": {{schedule.extra_data| from_yaml }},
             {% endif %}
