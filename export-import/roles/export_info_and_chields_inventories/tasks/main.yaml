@@ -98,13 +98,13 @@
   loop: "{{list_inventorie_sources_execute|default([])}}"
 
 - debug:
-    msg: "{{controller_inventory_sources_content}}"
+    msg: "{{export_output_inventorie_sources_aux_workflow}}"
 
 - set_fact:
     controller_inventory_sources_content: |-
       {"controller_inventory_sources":
         [
-        {% for inventory_source_info in controller_inventory_sources_content.results %}
+        {% for inventory_source_info in export_output_inventorie_sources_aux_workflow.results %}
           {{inventory_source_info.assets.inventory_sources}},
         {% endfor %}
         ]
