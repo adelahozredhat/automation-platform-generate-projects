@@ -86,7 +86,7 @@
 
 - copy: content="{{ controller_inventories_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_inventories.yml"
 
-- name: Export inventory tower from workflow
+- name: Export inventory_sources tower from workflow
   awx.awx.export:
     inventory_sources: "{{ item.name }}"
     controller_host: "{{ controller_hostname_old }}"
@@ -94,7 +94,10 @@
     controller_password: "{{ controller_password_old }}"
     validate_certs: "{{ controller_validate_certs_old }}"
   register: export_output_inventorie_sources_aux_workflow
-  loop: "{{list_inventorie_sources_execute|default([]))}}"
+  loop: "{{list_inventorie_sources_execute|default([])}}"
+
+- debug:
+    msg: "{{controller_inventory_sources_content}}"
 
 - set_fact:
     export_output_inventorie_sources: "{{export_output_inventorie_sources|union(export_output_inventorie_sources_aux_workflow.assets.inventory_sources|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
