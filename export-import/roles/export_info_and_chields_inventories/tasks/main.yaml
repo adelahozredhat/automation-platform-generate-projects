@@ -101,23 +101,11 @@
     msg: "{{controller_inventory_sources_content}}"
 
 - set_fact:
-    export_output_inventorie_sources_aux_workflow2: "{{export_output_inventorie_sources_aux_workflow2|union(item.assets.inventory_sources)}}"
-  when: item.assets is defined
-  loop: "{{export_output_inventorie_sources_aux_workflow.results}}"
-
-- set_fact:
-    export_output_inventorie_sources: "{{export_output_inventorie_sources|union(export_output_inventorie_sources_aux_workflow2|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
-  loop: "{{list_inventorie_sources_execute|default([])}}"
-
-- debug:
-    msg: "{{export_output_inventorie_sources}}"
-
-- set_fact:
     controller_inventory_sources_content: |-
       {"controller_inventory_sources":
         [
-        {% for inventory_info in export_output_inventorie_sources %}
-          {{inventory_info}},
+        {% for inventory_source_info in controller_inventory_sources_content.results %}
+          {{inventory_source_info.assets.inventory_sources}},
         {% endfor %}
         ]
       }
