@@ -15,15 +15,25 @@
         {% endfor %}
       {% endfor %}
       {% for projects in export_output_projects %}
-          {%- if projects.credential -%}
+        {%- if projects.credential -%}
           {%- if projects.credential.name != "GitHub" -%}
           {
           "name": "{{projects.credential.name}}",
           "organization": "{{projects.credential.organization.name}}"
           },
           {% endif %}
+        {% endif %}
+      {% endfor %}
+      {% for inventory_sources_info in controller_inventory_sources %}
+        {%- if inventory_sources_info.credential -%}
+          {%- if projects.credential.name != "GitHub" -%}
+          {
+          "name": "{{projects.credential.name}}",
+          "organization": "{{projects.credential.organization.name}}"
+          },
           {% endif %}
-        {% endfor %}
+        {% endif %}
+      {% endfor %}
       ]
 
 - debug:
