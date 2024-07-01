@@ -26,10 +26,10 @@
       {% endfor %}
       {% for inventory_sources_info in controller_inventory_sources %}
         {%- if inventory_sources_info.credential -%}
-          {%- if projects.credential.name != "GitHub" -%}
+          {%- if inventory_sources_info.credential.name != "GitHub" -%}
           {
-          "name": "{{projects.credential.name}}",
-          "organization": "{{projects.credential.organization.name}}"
+          "name": "{{inventory_sources_info.credential.name}}",
+          "organization": "{{inventory_sources_info.credential.organization.name}}"
           },
           {% endif %}
         {% endif %}
