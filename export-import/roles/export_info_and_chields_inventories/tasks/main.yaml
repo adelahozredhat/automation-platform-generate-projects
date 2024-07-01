@@ -48,7 +48,7 @@
   loop: "{{export_job_templates_output|union(controller_workflows|default([]))}}"
 
 - set_fact:
-    export_output_inventories: "{{export_output_inventories|union(export_output_inventories_aux2|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization.name))}}"
+    export_output_inventories: "{{export_output_inventories|union(export_output_inventories_aux2|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
   loop: "{{list_inventories_execute|default([]))}}"
 
 - debug:
