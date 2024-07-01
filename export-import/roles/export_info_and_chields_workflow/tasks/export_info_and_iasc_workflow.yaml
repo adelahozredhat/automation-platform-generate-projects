@@ -49,7 +49,7 @@
             "workflow_nodes":
             [
             {% for workflow_nodes_info in workflow_info.related.workflow_nodes %}
-            {
+              {
               "all_parents_must_converge": {{workflow_nodes_info.all_parents_must_converge}},
               {%- if workflow_nodes_info.diff_mode -%}
               "diff_mode": {{workflow_nodes_info.diff_mode}},
@@ -66,7 +66,6 @@
                 },
                 "name": "{{workflow_nodes_info.inventory.name}}",
                 "type": "{{workflow_nodes_info.inventory.type}}"
-
               },
               {% endif %}
               {%- if workflow_nodes_info.job_tags -%}
@@ -97,10 +96,10 @@
               {%- if workflow_nodes_info.workflow_job_template | from_yaml -%}
               "workflow_job_template": {{workflow_nodes_info.workflow_job_template | from_yaml}},
               {% endif %}
-            },
+              },
             {% endfor %}
             ]
-
+ 
           },
           {%- if workflow_info.scm_branch | from_yaml -%}
           "scm_branch": {{workflow_info.scm_branch}},
@@ -114,6 +113,9 @@
         {% endfor %}
         ]
       }
+ 
+- debug:
+    msg: "{{controller_workflows_content_tmp}}"
 
 - set_fact:
     controller_workflows_content:

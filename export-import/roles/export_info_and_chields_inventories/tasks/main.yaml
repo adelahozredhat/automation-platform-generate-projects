@@ -11,8 +11,8 @@
     validate_certs: "{{ controller_validate_certs_old }}"
   register: export_output_inventories_aux
   when: 
-    - item.inventory is defined 
-    - item.inventory
+  - item.inventory is defined
+  - item.inventory
   loop: "{{export_job_templates_output|union(controller_workflows|default([]))}}"
 
 - name: Export inventory tower from workflow
@@ -58,7 +58,7 @@
           {
           "description": "{{inventory_info.description}}",
           {%- if inventory_info.host_filter -%}
-          "host_filter": {{inventory_info.host_filter}},
+          "host_filter": "{{inventory_info.host_filter}}",
           {% endif %}
           "kind": "{{inventory_info.kind}}",
           "name": "{{inventory_info.name}}",

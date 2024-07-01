@@ -2,11 +2,22 @@
 - hosts: localhost
   gather_facts: false
   vars:
-    list_workflows_execute:
-      - name: "Prueba_Workflow"
-        organization: "Prueba"
-    folder_project_export_dest: "tests_executions/Prueba_Workflow"
-    vault_file: "../../../.vault_password"
+    list_workflows_execute: "{{ list_workflows }}"
+    folder_project_export_dest: "tests_executions"
+    relation_ve_ee:
+      "/var/lib/awx/venv/ansible/": "ee-ansible"
+      "/var/lib/awx/venv/applications_env/": "ee-applications_env"
+      "/var/lib/awx/venv/applications_env_python3/": "ee-applications_env_python3"
+      "/var/lib/awx/venv/cloud_azure/": "ee-cloud_azure"
+      "/var/lib/awx/venv/cloud_azure2/": "ee-cloud_azure2"
+      "/var/lib/awx/venv/collection_fetch_repo/": "ee-collection_fetch_repo"
+      "/var/lib/awx/venv/networking_env/": "ee-networking_env"
+      "/var/lib/awx/venv/networking_f5_bigip/": "ee-networking_f5_bigip"
+      "/var/lib/awx/venv/openshift/": "ee-openshift"
+      "/var/lib/awx/venv/tower_export/": "ee-tower_export"
+      "/var/lib/awx/venv/networking_aos_cx/": "ee-networking_aos_cx"
+      "/var/lib/awx/venv/applications_env_phyton3_report_monitoring/": "ee-applications_env_phyton3_report_monitoring"
+    vault_file: "../.vault_password"
   vars_files:
     - vault.yaml
   tasks:
@@ -17,13 +28,20 @@
 
     - name: Queue build of a project in Jenkins
       ansible.builtin.uri:
-        url: "http://{{ controller_hostname_old }}/api/v2/"
+        url: "https://{{ controller_hostname_old }}/api/v2/"
         user: "{{ controller_username_old }}"
         password: "{{ controller_password_old }}"
         method: GET
         force_basic_auth: true
         validate_certs: "{{controller_validate_certs_old}}"
       register: controller_metrics
+      environment:
+        HTTP_PROXY: ""
+        HTTPS_PROXY: ""
+        NO_PROXY: ""
+        http_proxy: ""
+        https_proxy: ""
+        no_proxy: ""
 
     - debug:
         msg: "{{controller_metrics}}"
@@ -57,9 +75,9 @@
       include_role: 
         name: export_info_and_chields_organizations 
 
-    - name: call the slave playbook
-      include_role: 
-        name: export_info_and_chields_schedulers 
+    #- name: call the slave playbook
+    #  include_role: 
+    #    name: export_info_and_chields_schedulers 
 
 - name: Mix with repo
   hosts: localhost
@@ -67,8 +85,8 @@
   vars_files:
     - vault.yaml
   vars:
-    folder_project_export_dest: "tests_executions/Prueba_Workflow"
-    vault_file: "../../../.vault_password"
+    folder_project_export_dest: "tests_executions"
+    vault_file: "../.vault_password"
 
   roles:
     - {role: update_iasc_to_repository}

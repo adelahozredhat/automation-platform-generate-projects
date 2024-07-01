@@ -43,6 +43,9 @@
     - name: controller_workflows
       encrypt: false
       config: "{{controller_workflows_content| default(omit) }}"
+    - name: controller_credential_input_sources
+      encrypt: false
+      config: "{{controller_credential_input_sources_content| default(omit) }}"
 
 - name: Publish the changes
   ansible.scm.git_publish:

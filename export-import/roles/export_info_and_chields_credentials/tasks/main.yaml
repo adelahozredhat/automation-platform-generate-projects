@@ -1,6 +1,7 @@
 - set_fact:
     export_output_credentials: []
     export_output_credentials_aux2: []
+    export_output_source_credential: []
     credentials_list: |-
       [
       {% for jobtemplates in export_job_templates_output %}
@@ -15,10 +16,12 @@
       {% endfor %}
       {% for projects in export_output_projects %}
           {%- if projects.credential -%}
+          {%- if projects.credential.name != "GitHub" -%}
           {
           "name": "{{projects.credential.name}}",
           "organization": "{{projects.credential.organization.name}}"
           },
+          {% endif %}
           {% endif %}
         {% endfor %}
       ]
@@ -164,3 +167,15 @@
 
 
   when: credentials_list|length>0
+
+- name: Export Inputs Source Credentials
+  include_tasks: input_source_credential.yaml
+  loop: "{{ credentials_list }}"
+
+- name: set facts
+  set_fact:
+    controller_credential_input_sources: "{{ export_output_source_credential }}"
+    controller_credential_input_sources_content: 
+      controller_credential_input_sources: "{{ export_output_source_credential }}"
+
+- copy: content="{{ controller_credential_input_sources_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_credential_input_sources.yml"
