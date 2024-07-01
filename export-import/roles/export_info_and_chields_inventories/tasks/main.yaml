@@ -106,7 +106,37 @@
         [
         {% for inventory_source_result in export_output_inventorie_sources_aux_workflow.results %}
           {% for inventory_source_info in inventory_source_result.assets.inventory_sources %}
-          {{inventory_source_info}},
+          {
+          "credential": {{inventory_source_info.credential}},
+          {%- if inventory_source_info.custom_virtualenv -%}
+          "custom_virtualenv": {{inventory_source_info.custom_virtualenv}},
+          {% endif %}
+          "description": "{{inventory_source_info.description}}",
+          "enabled_value": "{{inventory_source_info.enabled_value}}",
+          "enabled_var": "{{inventory_source_info.enabled_var}}",
+          "host_filter": "{{inventory_source_info.host_filter}}",
+          {%- if inventory_source_info.inventory -%}
+          "inventory": {{inventory_source_info.inventory}},
+          {% endif %}
+          "name": "{{inventory_source_info.name}}",
+          "overwrite": {{inventory_source_info.overwrite}},
+          "overwrite_vars": {{inventory_source_info.overwrite_vars}},
+          "related": {{inventory_source_info.related}},
+          "source": "{{inventory_source_info.source}}",
+          "source_path": "{{inventory_source_info.source_path}}",
+          "source_project": {{inventory_source_info.source_project}},
+          {%- if inventory_source_info.source_script -%}
+          "source_script": {{inventory_source_info.source_script}},
+          {% endif %}
+          {%- if inventory_source_info.source_vars -%}
+          "source_vars": {{inventory_source_info.source_vars| from_yaml}},
+          {% endif %}
+          "timeout": {{inventory_source_info.timeout}},
+          "update_cache_timeout": {{inventory_source_info.update_cache_timeout}},
+          "update_on_launch": {{inventory_source_info.update_on_launch}},
+          "update_on_project_update": {{inventory_source_info.update_on_project_update}},
+          "verbosity": {{inventory_source_info.verbosity}}
+          },
           {% endfor %}
         {% endfor %}
         ]
