@@ -2,6 +2,7 @@
     export_output_inventories: []
     export_output_inventorie_sources: []
     export_output_inventories_aux2: []
+    export_output_inventorie_sources_aux_workflow2: []
 
 - name: Export inventory tower
   awx.awx.export:
@@ -100,8 +101,16 @@
     msg: "{{controller_inventory_sources_content}}"
 
 - set_fact:
-    export_output_inventorie_sources: "{{export_output_inventorie_sources|union(export_output_inventorie_sources_aux_workflow.assets.inventory_sources|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
+    export_output_inventorie_sources_aux_workflow2: "{{export_output_inventorie_sources_aux_workflow2|union(item.assets.inventory_sources)}}"
+  when: item.assets is defined
+  loop: "{{export_output_inventorie_sources_aux_workflow.results}}"
+
+- set_fact:
+    export_output_inventorie_sources: "{{export_output_inventorie_sources|union(export_output_inventorie_sources_aux_workflow2|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
   loop: "{{list_inventorie_sources_execute|default([])}}"
+
+- debug:
+    msg: "{{export_output_inventorie_sources}}"
 
 - set_fact:
     controller_inventory_sources_content: |-
