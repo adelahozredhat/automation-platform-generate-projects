@@ -101,7 +101,7 @@
 
 - set_fact:
     export_output_inventorie_sources: "{{export_output_inventorie_sources|union(export_output_inventorie_sources_aux_workflow.assets.inventory_sources|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
-  loop: "{{list_inventorie_source_execute|default([])}}"
+  loop: "{{list_inventorie_sources_execute|default([])}}"
 
 - set_fact:
     controller_inventory_sources_content: |-
