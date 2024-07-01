@@ -47,6 +47,10 @@
       encrypt: false
       config: "{{controller_credential_input_sources_content| default(omit) }}"
 
+    - name: controller_inventory_sources
+      encrypt: false
+      config: "{{controller_inventory_sources_content| default(omit) }}"
+
 - name: Publish the changes
   ansible.scm.git_publish:
     path: "repo_dest"

@@ -1,5 +1,6 @@
 - set_fact:
     export_output_inventories: []
+    export_output_inventorie_sources: []
     export_output_inventories_aux2: []
 
 - name: Export inventory tower
@@ -23,7 +24,7 @@
     controller_password: "{{ controller_password_old }}"
     validate_certs: "{{ controller_validate_certs_old }}"
   register: export_output_inventories_aux_workflow
-  loop: "{{list_inventories_execute|default([]))}}"
+  loop: "{{list_inventories_execute|default([])}}"
 
 - debug:
     msg: "{{export_output_inventories_aux}}"
@@ -41,6 +42,9 @@
 
 - set_fact:
     export_output_inventories: "{{export_output_inventories|union(export_output_inventories_aux2|selectattr('name','eq',item.inventory.name)|selectattr('organization.name','eq',item.inventory.organization.name))}}"
+  when: 
+    - item.inventory is defined 
+    - item.inventory
   loop: "{{export_job_templates_output|union(controller_workflows|default([]))}}"
 
 - set_fact:
@@ -81,3 +85,40 @@
     msg: "{{controller_inventories}}"
 
 - copy: content="{{ controller_inventories_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_inventories.yml"
+
+- name: Export inventory tower from workflow
+  awx.awx.export:
+    inventory_sources: "{{ item.name }}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_output_inventorie_sources_aux_workflow
+  loop: "{{list_inventorie_sources_execute|default([]))}}"
+
+- set_fact:
+    export_output_inventorie_sources: "{{export_output_inventorie_sources|union(export_output_inventorie_sources_aux_workflow.assets.inventory_sources|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
+  loop: "{{list_inventorie_source_execute|default([])}}"
+
+- set_fact:
+    controller_inventory_sources_content: |-
+      {"controller_inventory_sources":
+        [
+        {% for inventory_info in export_output_inventorie_sources %}
+          {{inventory_info}},
+        {% endfor %}
+        ]
+      }
+
+- debug:
+    msg: "{{controller_inventory_sources_content}}"
+
+- set_fact:
+    controller_inventory_sources: "{{controller_inventory_sources_content.controller_inventory_sources}}"
+
+- debug:
+    msg: "{{controller_inventory_sources}}"
+
+- copy: content="{{ controller_inventory_sources_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_inventory_sources.yml"
+
+
