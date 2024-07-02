@@ -1,4 +1,4 @@
-- name: Export workflow tower
+- name: "Export workflow tower {{list_workflows_execute| community.general.json_query('[*].name')}}"
   awx.awx.export:
     workflow_job_templates: "{{list_workflows_execute| community.general.json_query('[*].name')}}"
     controller_host: "{{ controller_hostname_old }}"
@@ -129,7 +129,7 @@
     list_jobs_templates_execute: "{{ list_jobs_templates_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization.name, type: type}')| community.general.json_query('[0][?starts_with(type,`job_template`)].{name: name, organization: organization}'))}}"
     list_inventories_execute: "{{ list_inventories_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].inventory.{name: name, organization: organization.name, type: type}')| community.general.json_query('[0][?starts_with(type,`inventory`)].{name: name, organization: organization}'))| union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.inventory.{name: name, organization: organization.name, type: type}')| community.general.json_query('[0][?starts_with(type,`inventory`)].{name: name, organization: organization}'))}}"
     list_inventorie_sources_execute: "{{ list_inventories_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization.name, type: type}')| community.general.json_query('[0][?starts_with(type,`inventory_source`)].{name: name, organization: organization}'))}}"
-    unified_workflow_job_template: "{{ controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization, type: type}')| community.general.json_query('[0][?starts_with(type,`workflow_job_template`)].{name: name, organization: organization}')| difference(list_workflows) }}"
+    unified_workflow_job_template: "{{ controller_workflows_content_tmp | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization, type: type}')| community.general.json_query('[0][?starts_with(type,`workflow_job_template`)].{name: name, organization: organization}')| difference(list_workflows) }}"
     list_credentials_execute: "{{ list_credentials_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].related.credentials[*].{name: name, organization: organization.name, type: type}')| community.general.json_query('[0]')| select() | community.general.json_query('[*][?starts_with(type,`credential`)].{name: name, organization: organization}') )}}"
 
 - debug:
@@ -153,3 +153,7 @@
 - name: call the slave playbook
   include_tasks: export_info_and_iasc_workflow.yaml
   when: list_workflows_execute|length>0
+
+- set_fact: 
+    list_workflows: ""
+    list_workflows_execute: ""
