@@ -2,7 +2,7 @@
     list_workflows: "{{list_workflows_execute}}"
     list_jobs_templates_execute: []
     list_inventories_execute: []
-    list_inventorie_source_execute: []
+    list_inventorie_sources_execute: []
     list_credentials_execute: []
     controller_workflows_content:
       controller_workflows: []
