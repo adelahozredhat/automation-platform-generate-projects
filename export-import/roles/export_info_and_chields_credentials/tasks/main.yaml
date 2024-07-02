@@ -24,8 +24,8 @@
           {% endif %}
         {% endif %}
       {% endfor %}
-      {% for inventory_source_result in export_output_inventorie_sources_aux_workflow %}
-        {% for inventory_sources_info in inventory_source_result.assets.inventory_sources %}
+      {% for inventory_source_result in export_output_inventorie_sources_aux_workflow.results %}
+          {% for inventory_source_info in inventory_source_result.assets.inventory_sources %}
           {%- if inventory_sources_info.credential -%}
             {%- if inventory_sources_info.credential.name != "GitHub" -%}
             {
