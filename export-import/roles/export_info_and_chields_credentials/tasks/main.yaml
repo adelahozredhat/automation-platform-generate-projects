@@ -25,7 +25,7 @@
         {% endif %}
       {% endfor %}
       {% for inventory_source_result in export_output_inventorie_sources_aux_workflow.results %}
-          {% for inventory_source_info in inventory_source_result.assets.inventory_sources %}
+        {% for inventory_source_info in inventory_source_result.assets.inventory_sources %}
           {%- if inventory_sources_info.credential -%}
             {%- if inventory_sources_info.credential.name != "GitHub" -%}
             {
@@ -35,6 +35,14 @@
             {% endif %}
           {% endif %}
         {% endfor %}
+      {% endfor %}
+      {% for credentials_workflow_nodes in list_credentials_execute %}
+        {%- if credentials_workflow_nodes.name != "GitHub" -%}
+          {
+          "name": "{{credentials_workflow_nodes.name}}",
+          "organization": "{{credentials_workflow_nodes.organization}}"
+          },
+        {% endif %}
       {% endfor %}
       ]
 
