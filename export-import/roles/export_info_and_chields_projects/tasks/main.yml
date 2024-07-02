@@ -72,3 +72,6 @@
 
 - copy: content="{{ controller_projects_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_projects.yml"
     
+- set_fact:
+    export_output_projects_aux: ""
+    export_output_projects_aux2: ""

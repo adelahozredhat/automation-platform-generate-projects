@@ -154,3 +154,6 @@
 - copy: content="{{ controller_inventory_sources_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_inventory_sources.yml"
 
 
+- set_fact:
+    export_output_inventories_aux: ""
+    export_output_inventories_aux_workflow: ""

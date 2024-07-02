@@ -127,3 +127,6 @@
     msg: "{{controller_templates}}"
 
 - copy: content="{{ controller_job_templates_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_templates.yml"
+
+- set_fact:
+    export_job_templates_output_aux: ""

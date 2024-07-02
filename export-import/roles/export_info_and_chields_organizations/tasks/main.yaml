@@ -74,3 +74,6 @@
 
 
   when: organizations_list_names|length>0
+
+- set_fact:
+    export_output_organizations: ""
