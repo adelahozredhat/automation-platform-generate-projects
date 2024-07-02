@@ -37,12 +37,14 @@
         {% endfor %}
       {% endfor %}
       {% for credentials_workflow_nodes in list_credentials_execute %}
-        {%- if credentials_workflow_nodes.name != "GitHub" -%}
-          {
-          "name": "{{credentials_workflow_nodes.name}}",
-          "organization": "{{credentials_workflow_nodes.organization}}"
-          },
-        {% endif %}
+        {% for node in credentials_workflow_nodes %}
+          {%- if node.name != "GitHub" -%}
+            {
+            "name": "{{node.name}}",
+            "organization": "{{node.organization}}"
+            },
+          {% endif %}
+        {% endfor %}
       {% endfor %}
       ]
 
