@@ -21,35 +21,34 @@
   loop:
     - name: controller_credentials
       encrypt: true
-      config: "{{controller_credentials_content| default(omit) }}"
+      config: "{{controller_credentials_content| default([]) }}"
     - name: controller_credential_types
       encrypt: false
-      config: "{{controller_credential_types_content| default(omit) }}"
+      config: "{{controller_credential_types_content| default([]) }}"
     - name: controller_inventories
       encrypt: false
-      config: "{{controller_inventories_content| default(omit) }}"
+      config: "{{controller_inventories_content| default([]) }}"
     - name: controller_templates
       encrypt: false
-      config: "{{controller_job_templates_content| default(omit) }}"
+      config: "{{controller_job_templates_content| default([]) }}"
     - name: controller_organizations
       encrypt: false
-      config: "{{controller_organizations_content| default(omit) }}"
+      config: "{{controller_organizations_content| default([]) }}"
     - name: controller_projects
       encrypt: false
-      config: "{{controller_projects_content| default(omit) }}"
+      config: "{{controller_projects_content| default([]) }}"
     - name: controller_schedules
       encrypt: false
-      config: "{{controller_schedules_content| default(omit) }}"
+      config: "{{controller_schedules_content| default([]) }}"
     - name: controller_workflows
       encrypt: false
-      config: "{{controller_workflows_content| default(omit) }}"
+      config: "{{controller_workflows_content| default([]) }}"
     - name: controller_credential_input_sources
       encrypt: false
-      config: "{{controller_credential_input_sources_content| default(omit) }}"
-
+      config: "{{controller_credential_input_sources_content| default([]) }}"
     - name: controller_inventory_sources
       encrypt: false
-      config: "{{controller_inventory_sources_content| default(omit) }}"
+      config: "{{controller_inventory_sources_content| default([]) }}"
 
 - name: Publish the changes
   ansible.scm.git_publish:

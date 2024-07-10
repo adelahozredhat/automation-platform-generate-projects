@@ -157,3 +157,5 @@
 - set_fact:
     export_output_inventories_aux: ""
     export_output_inventories_aux_workflow: ""
+    export_output_inventories_aux2: ""
+    list_inventorie_sources_execute: ""

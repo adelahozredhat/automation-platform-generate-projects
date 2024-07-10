@@ -88,7 +88,7 @@
               {%- if survey_list.choices -%}
               "choices": 
               [
-                {% for choices_list in survey_list.choices | split %}
+                {% for choices_list in survey_list.choices | split("\n") %}
                 "{{choices_list}}",
                 {% endfor %}
               ],

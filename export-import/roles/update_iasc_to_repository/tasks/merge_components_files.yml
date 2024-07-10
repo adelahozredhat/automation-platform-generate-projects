@@ -47,4 +47,4 @@
 
     when: file_status_repo.stat.exists
 
-  when: file_status_made.stat.exists
+  when: file_status_made.stat.exists and item.config|length>0
