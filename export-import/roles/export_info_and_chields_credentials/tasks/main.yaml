@@ -6,50 +6,66 @@
       [
       {% for jobtemplates in export_job_templates_output %}
         {% for credential_list in jobtemplates.related.credentials %}
+        {%- if credential_list.name is defined -%}
           {%- if credential_list.name != "Demo Credential" -%}
           {
-          "name": "{{credential_list.name}}",
-          "organization": "{{credential_list.organization.name}}"
-          },
+          {%- if credential_list.organization.name is defined -%}
+          "organization": "{{credential_list.organization.name}}",
           {% endif %}
-        {% endfor %}
-      {% endfor %}
-      {% for projects in export_output_projects %}
-        {%- if projects.credential -%}
-          {%- if projects.credential.name != "GitHub" -%}
-          {
-          "name": "{{projects.credential.name}}",
-          "organization": "{{projects.credential.organization.name}}"
+          "name": "{{credential_list.name}}"
           },
           {% endif %}
         {% endif %}
+        {% endfor %}
+      {% endfor %}
+      {% for projects in export_output_projects %}
+        {%- if projects.credential is defined -%}
+        {%- if projects.credential.name is defined -%}
+          {%- if projects.credential.name != "GitHub" -%}
+          {
+          {%- if projects.credential.organization.name is defined -%}
+          "organization": "{{projects.credential.organization.name}}",
+          {% endif %}
+          "name": "{{projects.credential.name}}"
+          },
+          {% endif %}
+        {% endif %}
+        {% endif %}
       {% endfor %}
       {% for inventory_source_result in export_output_inventorie_sources_aux_workflow.results %}
-        {% for inventory_source_info in inventory_source_result.assets.inventory_sources %}
+        {% for inventory_sources_info in inventory_source_result.assets.inventory_sources %}
           {%- if inventory_sources_info.credential -%}
+          {%- if inventory_sources_info.credential,name is defined -%}
             {%- if inventory_sources_info.credential.name != "GitHub" -%}
             {
-            "name": "{{inventory_sources_info.credential.name}}",
-            "organization": "{{inventory_sources_info.credential.organization.name}}"
+            {%- if inventory_sources_info.credential.organization.name is defined -%}
+            "organization": "{{inventory_sources_info.credential.organization.name}}",
+            {% endif %}
+            "name": "{{inventory_sources_info.credential.name}}"
             },
             {% endif %}
           {% endif %}
-        {% endfor %}
-      {% endfor %}
-      {% for credentials_workflow_nodes in list_credentials_execute %}
-        {% for node in credentials_workflow_nodes %}
-          {%- if node.name != "GitHub" -%}
-            {
-            "name": "{{node.name}}",
-            "organization": "{{node.organization}}"
-            },
           {% endif %}
         {% endfor %}
       {% endfor %}
+      {% for credentials_workflow_nodes in list_credentials_execute|default([]) %}
+        {%- if credentials_workflow_nodes.name is defined -%}
+        {%- if credentials_workflow_nodes.name != "GitHub" -%}
+          {
+          "name": "{{credentials_workflow_nodes.name}}",
+          "organization": "{{credentials_workflow_nodes.organization}}"
+          },
+        {% endif %}
+        {% endif %}
+      {% endfor %}
       ]
 
-- debug:
+- name: CREDENTIAL LIST
+  debug:
     msg: "{{credentials_list}}"
+  tags:
+    - debug
+    - debug_credentials
 
 - block:
     
@@ -65,6 +81,9 @@
 
   - debug:
       msg: "{{export_output_credentials_aux}}"
+    tags:
+      - debug
+      - debug_credentials
 
   - set_fact:
       export_output_credentials_aux2: "{{export_output_credentials_aux2|union(item.assets.credentials)}}"
@@ -72,16 +91,31 @@
 
   - debug:
       msg: "{{export_output_credentials_aux2}}"
+    tags:
+      - debug
+      - debug_credentials
 
   - set_fact:
-      export_output_credentials: "{{export_output_credentials|union(export_output_credentials_aux2|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
+      export_output_credentials: "{{export_output_credentials|union(export_output_credentials_aux2|selectattr('name','eq',item.name)|selectattr('organization.name','defined')|selectattr('organization.name','eq',item.organization) )}}"
+    when: item.organization is defined
     loop: "{{credentials_list}}"
 
+  - set_fact:
+      export_output_credentials: "{{export_output_credentials|union(export_output_credentials_aux2|selectattr('name','eq',item.name))}}"
+    when: item.organization is undefined
+    loop: "{{credentials_list}}"
+    
   - debug:
       msg: "{{export_output_credentials}}"
+    tags:
+      - debug
+      - debug_credentials
 
   - debug:
       msg: "{{credential_vaults}}"
+    tags:
+      - debug
+      - debug_credentials
 
 
   - set_fact:
@@ -93,12 +127,16 @@
             "name": "{{credential.name}}",
             "credential_type": "{{credential.credential_type.name}}",
             "description": "{{credential.description}}",
-            {%- if credential_vaults is defined and credential_vaults[credential.name] is defined and credential_vaults[credential.name][credential.organization.name] is defined and credential_vaults [credential.name][credential.organization.name].inputs is defined-%}
+            {%- if credential_vaults is defined and credential.organization.name is defined and credential_vaults[credential.name] is defined and credential_vaults[credential.name][credential.organization.name] is defined and credential_vaults [credential.name][credential.organization.name].inputs is defined-%}
             "inputs": {{credential_vaults[credential.name][credential.organization.name].inputs}},
             {% else %}
             "inputs": {{credential.inputs|replace("$encrypted$","")}},
             {% endif %}
+            {%- if credential.organization.name is defined-%}
             "organization": "{{credential.organization.name}}"
+            {% else %}
+            "organization": "Default"
+            {% endif %}
             },
           {% endfor %}
           ]
@@ -106,12 +144,18 @@
 
   - debug:
       msg: "{{controller_credentials_content}}"
+    tags:
+      - debug
+      - debug_credentials
 
   - set_fact:
       controller_credentials: "{{controller_credentials_content.controller_credentials}}"
 
   - debug:
       msg: "{{controller_credentials}}"
+    tags:
+      - debug
+      - debug_credentials
 
   - copy: content="{{ controller_credentials_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_credentials.yml"
 
@@ -135,7 +179,7 @@
           [
           {% for result in export_output_credential_types.results %}
             {% for credential_type in result.assets.credential_types %}
-              {%- if credential_type.name != "Machine" and credential_type.name != "Source Control" and credential_type.name != "Amazon Web Services" and credential_type.name != "Ansible Tower" -%}
+              {%- if credential_type.name != "Machine" and credential_type.name != "Source Control" and credential_type.name != "Network" and credential_type.name != "Vault" and credential_type.name != "Microsoft Azure Resource Manager" and credential_type.name != "Amazon Web Services" and credential_type.name != "Ansible Tower" -%}
               {
               "description": "{{credential_type.description}}",
               "injectors": {{credential_type.injectors| replace('{{','{  {')}},
@@ -178,12 +222,18 @@
 
   - debug:
       msg: "{{controller_credential_types_content}}"
+    tags:
+      - debug
+      - debug_credentials
 
   - set_fact:
       controller_credential_types: "{{controller_credential_types_content.controller_credential_types}}"
 
   - debug:
       msg: "{{controller_credential_types}}"
+    tags:
+      - debug
+      - debug_credentials
 
   - copy: content="{{ controller_credential_types_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_credential_types.yml"
 

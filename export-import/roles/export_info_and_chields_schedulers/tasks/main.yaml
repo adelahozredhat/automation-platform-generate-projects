@@ -1,17 +1,17 @@
 - name: Export Scheduler tower
   awx.awx.export:
-    schedules: "{{ item | community.general.json_query('related.schedules[*].name')}}"
+    schedules: "{{ list_workflows_execute| community.general.json_query('[*].name'}}"
     controller_host: "{{ controller_hostname_old }}"
     controller_username: "{{ controller_username_old }}"
     controller_password: "{{ controller_password_old }}"
     validate_certs: "{{ controller_validate_certs_old }}"
   register: export_output_scheduler
-  loop: "{{export_job_templates_output}}"
-
-
 
 - debug:
     msg: "{{export_output_scheduler}}"
+  tags:
+    - debug
+    - debug_schedulers
 
 - set_fact:
     controller_schedules_content: |-
@@ -22,7 +22,7 @@
             {
             "description": "{{schedule.description}}",
             "diff_mode": "{{schedule.diff_mode}}",
-            "enabled": {{schedule.enabled|lower}},
+            "enabled": {{schedule.enabled}},
             {%- if schedule.extra_data | from_yaml -%}
             "extra_data": {{schedule.extra_data| from_yaml }},
             {% endif %}
@@ -60,6 +60,9 @@
 
 - debug:
     msg: "{{controller_schedules_content}}"
+  tags:
+    - debug
+    - debug_schedulers
 
 - block:
 
@@ -68,6 +71,9 @@
 
   - debug:
       msg: "{{controller_schedules}}"
+    tags:
+      - debug
+      - debug_schedulers
 
   - copy: content="{{ controller_schedules_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_schedules.yml"
 

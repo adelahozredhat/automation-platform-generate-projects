@@ -1,5 +1,6 @@
 - set_fact:
     export_job_templates_output: []
+    salto_de_linea: "\\n"
 
 - name: Export job_templates tower
   awx.awx.export:
@@ -12,15 +13,20 @@
 
 - debug:
     msg: "{{export_job_templates_output_aux}}"
+  tags:
+    - debug
+    - debug_jobtemplates
 
 - set_fact:
     export_job_templates_output: "{{export_job_templates_output|union(export_job_templates_output_aux.assets.job_templates|selectattr('name','eq',item.name)|selectattr('project.organization.name','eq',item.organization))}}"
   loop: "{{list_jobs_templates_execute}}"
 
 
-
 - debug:
     msg: "{{export_job_templates_output}}"
+  tags:
+    - debug
+    - debug_jobtemplates
 
 - set_fact:
     controller_job_templates_content: |-
@@ -28,7 +34,6 @@
         [
         {% for jobtemplates in export_job_templates_output %}
           {
-          "allow_simultaneous": {{jobtemplates.allow_simultaneous}},
           "ask_credential_on_launch": {{jobtemplates.ask_credential_on_launch}},
           "ask_diff_mode_on_launch": {{jobtemplates.ask_diff_mode_on_launch}},
           "ask_inventory_on_launch": {{jobtemplates.ask_inventory_on_launch}},
@@ -51,7 +56,11 @@
           "force_handlers": {{jobtemplates.force_handlers}},
           "forks": {{jobtemplates.forks}},
           "host_config_key": "{{jobtemplates.host_config_key}}",
+          {%- if jobtemplates.inventory -%}
           "inventory": {{jobtemplates.inventory}},
+          {% else %}
+          "inventory": "",
+          {% endif %}
           "job_slice_count": {{jobtemplates.job_slice_count}},
           "job_tags": "{{jobtemplates.job_tags}}",
           "job_type": "{{jobtemplates.job_type}}",
@@ -75,7 +84,16 @@
           {% for credentials_list_names in jobtemplates.related.credentials %}
           "{{credentials_list_names.name}}",
           {% endfor %}
-          ],
+          ]
+          {%- if jobtemplates.related.notification_templates_error is defined -%}
+          "notification_templates_error": {{jobtemplates.related.notification_templates_error}},
+          {% endif %}
+          {%- if jobtemplates.related.notification_templates_started is defined -%}
+          "notification_templates_started": {{jobtemplates.related.notification_templates_started}},
+          {% endif %}
+          {%- if jobtemplates.related.notification_templates_success is defined -%}
+          "notification_templates_success": {{jobtemplates.related.notification_templates_success}},
+          {% endif %}
           {%- if jobtemplates.related.survey_spec -%}
           "survey_spec": 
           {
@@ -88,12 +106,16 @@
               {%- if survey_list.choices -%}
               "choices": 
               [
-                {% for choices_list in survey_list.choices | split("\n") %}
+                {% for choices_list in survey_list.choices.splitlines(False) %}
                 "{{choices_list}}",
                 {% endfor %}
               ],
               {% endif %}
-              {%- if survey_list.type != 'password' -%}
+              {%- if survey_list.type == 'multiselect' -%}
+              "default": "{{ survey_list.default.splitlines(False)|join(salto_de_linea) }}", 
+              {%- elif survey_list.type == 'integer' -%}
+              "default": {{survey_list.default}},
+              {% elif survey_list.type != 'password' %}
               "default": "{{survey_list.default}}", 
               {% endif %}
               {%- if survey_list.max -%}
@@ -110,21 +132,29 @@
             },
             {% endfor %}
             ]
-          }
+          },
           {% endif %}
+          "allow_simultaneous": {{jobtemplates.allow_simultaneous}}
           },
         {% endfor %}
         ]
       }
 
+
 - debug:
     msg: "{{controller_job_templates_content}}"
+  tags:
+    - debug
+    - debug_jobtemplates
 
 - set_fact:
     controller_templates: "{{controller_job_templates_content.controller_templates}}"
 
 - debug:
     msg: "{{controller_templates}}"
+  tags:
+    - debug
+    - debug_jobtemplates
 
 - copy: content="{{ controller_job_templates_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_templates.yml"
 

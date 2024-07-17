@@ -1,0 +1,5 @@
+controller_inventories:
+- description: ''
+  kind: ''
+  name: Tower_Infrastructure_Inventory
+  organization: {name: AXA_OPs_Infrastructure, type: organization}

@@ -1,0 +1,48 @@
+controller_templates:
+- allow_simultaneous: false
+  ask_credential_on_launch: false
+  ask_diff_mode_on_launch: false
+  ask_inventory_on_launch: false
+  ask_job_type_on_launch: false
+  ask_limit_on_launch: false
+  ask_scm_branch_on_launch: false
+  ask_skip_tags_on_launch: false
+  ask_tags_on_launch: false
+  ask_variables_on_launch: false
+  ask_verbosity_on_launch: false
+  become_enabled: false
+  credentials: [Silva Credential]
+  description: Realiza una query contra la api de silva para ver un host
+  diff_mode: false
+  extra_vars: {silva_hostname: EAMA2012}
+  force_handlers: false
+  forks: 0
+  host_config_key: ''
+  inventory:
+    name: Tower_Infrastructure_Inventory
+    organization: {name: AXA_OPs_Infrastructure, type: organization}
+    type: inventory
+  job_slice_count: 1
+  job_tags: ''
+  job_type: run
+  limit: ''
+  name: Check silva record by hostname
+  playbook: check_server_present_on_silva.yml
+  project:
+    name: Infra-Repo-develop
+    organization: {name: AXA_OPs_Infrastructure, type: organization}
+    type: project
+  scm_branch: ''
+  skip_tags: ''
+  start_at_task: ''
+  survey_enabled: true
+  survey_spec:
+    description: ''
+    name: ''
+    spec:
+    - {default: '', max: 1024, question_description: '', question_name: Hostname to
+        check, required: true, type: text, variable: silva_hostname}
+  timeout: 0
+  use_fact_cache: false
+  verbosity: 0
+  webhook_service: ''

@@ -1,0 +1,66 @@
+- set_fact:
+    labels_list: |-
+      [
+      {% for controller_template in controller_job_templates_content.controller_templates|default([]) %}
+        {% for label in controller_template.labels|default([]) %}
+          {
+          "label": "{{label.name}}",
+          "organization": "{{controller_template.organization.name}}"
+          },
+        {% endfor %}
+      {% endfor %}
+      {% for controller_workflow in controller_workflows_content.controller_workflows|default([]) %}
+        {% for label in controller_workflow.related.labels|default([]) %}
+          {
+          "name": "{{label.name}}",
+          {%- if label.organization is defined and label.organization.name is defined -%}
+          "organization": "{{label.organization.name}}"
+          {% endif %}
+          },
+        {% endfor %}
+      {% endfor %}
+
+      ]
+
+- name: LABELS LIST
+  debug:
+    msg: "{{labels_list}}"
+  tags:
+    - debug
+    - debug_credentials
+
+- set_fact:
+    controller_labels_content: |-
+      {"controller_labels":
+        [
+        {% for label in labels_list %}
+          {
+          "name": "{{label.name}}",
+          "organization": "{{label.organization}}"
+          },
+        {% endfor %}
+        ]
+      }
+
+- debug:
+    msg: "{{controller_labels_content}}"
+  tags:
+    - debug
+    - debug_credentials
+
+#- name: Pause 
+#  ansible.builtin.pause:
+#    minutes: 5
+
+- set_fact:
+    controller_labels: "{{controller_labels_content.controller_labels}}"
+
+- debug:
+    msg: "{{controller_labels}}"
+  tags:
+    - debug
+    - debug_credentials
+
+- copy: content="{{ controller_labels_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_labels.yml"
+
+  

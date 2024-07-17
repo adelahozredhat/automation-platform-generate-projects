@@ -3,7 +3,7 @@
   gather_facts: false
   vars:
     list_jobs_templates_execute: "{{ list_job_template }}"
-    folder_project_export_dest: "tests_executions"
+    folder_project_export_dest: "{{ folder_project_export_dest_arg|default('tests_executions') }}"
     relation_ve_ee:
       "/var/lib/awx/venv/ansible/": "ee-ansible"
       "/var/lib/awx/venv/applications_env/": "ee-applications_env"
@@ -41,6 +41,8 @@
 
     - debug:
         msg: "{{controller_metrics}}"
+      tags:
+        - debug
 
     - name: Creates directory
       ansible.builtin.file:
@@ -67,21 +69,17 @@
       include_role: 
         name: export_info_and_chields_organizations 
 
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_labels
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_notifications
+
         #    - name: call the slave playbook
         #      include_role: 
         #        name: export_info_and_chields_schedulers 
-
-- name: Mix with repo
-  hosts: localhost
-  gather_facts: false
-  vars_files:
-    - vault.yaml
-  vars:
-    folder_project_export_dest: "tests_executions"
-    vault_file: "../.vault_password"
-
-  roles:
-    - {role: update_iasc_to_repository}
 
 - hosts: localhost
   gather_facts: false
@@ -124,4 +122,22 @@
         validate_certs: "{{ controller_validate_certs }}"
         status_code: 204
       when: controller_oauthtoken_url is defined
+
+- name: Mix with repo
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vault.yaml
+  vars:
+    folder_project_export_dest: "{{ folder_project_export_dest_arg|default('tests_executions') }}"
+    vault_file: "../.vault_password"
+
+  roles:
+    - {role: update_iasc_to_repository}
+
+  post_tasks:
+    - name: Delete temp execution files
+      ansible.builtin.file:
+        path: "{{ folder_project_export_dest }}"
+        state: absent
 ...

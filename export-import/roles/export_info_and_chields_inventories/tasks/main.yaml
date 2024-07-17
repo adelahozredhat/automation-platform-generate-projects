@@ -2,7 +2,6 @@
     export_output_inventories: []
     export_output_inventorie_sources: []
     export_output_inventories_aux2: []
-    export_output_inventorie_sources_aux_workflow2: []
 
 - name: Export inventory tower
   awx.awx.export:
@@ -29,9 +28,9 @@
 
 - debug:
     msg: "{{export_output_inventories_aux}}"
-
-- debug:
-    msg: "{{export_output_inventories_aux.results}}"
+  tags:
+    - debug
+    - debug_inventories
 
 - set_fact:
     export_output_inventories_aux2: "{{export_output_inventories_aux2|union(item.assets.inventory)}}"
@@ -40,6 +39,9 @@
 
 - debug:
     msg: "{{export_output_inventories_aux2}}"
+  tags:
+    - debug
+    - debug_inventories
 
 - set_fact:
     export_output_inventories: "{{export_output_inventories|union(export_output_inventories_aux2|selectattr('name','eq',item.inventory.name)|selectattr('organization.name','eq',item.inventory.organization.name))}}"
@@ -50,10 +52,13 @@
 
 - set_fact:
     export_output_inventories: "{{export_output_inventories|union(export_output_inventories_aux2|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
-  loop: "{{list_inventories_execute|default([]))}}"
+  loop: "{{list_inventories_execute|default([])}}"
 
 - debug:
     msg: "{{export_output_inventories}}"
+  tags:
+    - debug
+    - debug_inventories
 
 - set_fact:
     controller_inventories_content: |-
@@ -78,12 +83,18 @@
 
 - debug:
     msg: "{{controller_inventories_content}}"
+  tags:
+    - debug
+    - debug_inventories
 
 - set_fact:
     controller_inventories: "{{controller_inventories_content.controller_inventories}}"
 
 - debug:
     msg: "{{controller_inventories}}"
+  tags:
+    - debug
+    - debug_inventories
 
 - copy: content="{{ controller_inventories_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_inventories.yml"
 
@@ -99,6 +110,9 @@
 
 - debug:
     msg: "{{export_output_inventorie_sources_aux_workflow}}"
+  tags:
+    - debug
+    - debug_inventories
 
 - set_fact:
     controller_inventory_sources_content: |-
@@ -107,7 +121,7 @@
         {% for inventory_source_result in export_output_inventorie_sources_aux_workflow.results %}
           {% for inventory_source_info in inventory_source_result.assets.inventory_sources %}
           {
-          "credential": {{inventory_source_info.credential}},
+          "credential": "{{inventory_source_info.credential.name}}",
           {%- if inventory_source_info.custom_virtualenv -%}
           "custom_virtualenv": {{inventory_source_info.custom_virtualenv}},
           {% endif %}
@@ -116,7 +130,7 @@
           "enabled_var": "{{inventory_source_info.enabled_var}}",
           "host_filter": "{{inventory_source_info.host_filter}}",
           {%- if inventory_source_info.inventory -%}
-          "inventory": {{inventory_source_info.inventory}},
+          "inventory": "{{inventory_source_info.inventory.name}}",
           {% endif %}
           "name": "{{inventory_source_info.name}}",
           "overwrite": {{inventory_source_info.overwrite}},
@@ -124,9 +138,9 @@
           "related": {{inventory_source_info.related}},
           "source": "{{inventory_source_info.source}}",
           "source_path": "{{inventory_source_info.source_path}}",
-          "source_project": {{inventory_source_info.source_project}},
-          {%- if inventory_source_info.source_script -%}
-          "source_script": {{inventory_source_info.source_script}},
+          "source_project": "{{inventory_source_info.source_project.name}}",
+          {%- if inventory_source_info.source_script is defined -%}
+          "source_script": "{{ inventory_source_info.source_script }}",
           {% endif %}
           {%- if inventory_source_info.source_vars -%}
           "source_vars": {{inventory_source_info.source_vars| from_yaml}},
@@ -144,18 +158,22 @@
 
 - debug:
     msg: "{{controller_inventory_sources_content}}"
+  tags:
+    - debug
+    - debug_inventories
 
 - set_fact:
     controller_inventory_sources: "{{controller_inventory_sources_content.controller_inventory_sources}}"
 
 - debug:
     msg: "{{controller_inventory_sources}}"
+  tags:
+    - debug
+    - debug_inventories
 
 - copy: content="{{ controller_inventory_sources_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_inventory_sources.yml"
-
 
 - set_fact:
     export_output_inventories_aux: ""
     export_output_inventories_aux_workflow: ""
-    export_output_inventories_aux2: ""
-    list_inventorie_sources_execute: ""
+    

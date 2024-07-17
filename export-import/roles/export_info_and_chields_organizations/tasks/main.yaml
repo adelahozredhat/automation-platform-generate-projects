@@ -7,19 +7,25 @@
         "{{jobtemplates.natural_key.organization.name}}",
       {% endfor %}
       {% for projects in export_output_projects %}
+        {%- if projects.organization.name is defined -%}
         "{{projects.organization.name}}",
+        {% endif %}
       {% endfor %}
       {% for inventory in export_output_inventories %}
+        {%- if inventory.organization.name is defined -%}
         "{{inventory.organization.name}}",
+        {% endif %}
       {% endfor %}
       {%- if export_output_credentials is defined -%}
         {% for credential in export_output_credentials %}
+          {%- if credential.organization.name is defined -%}
            "{{credential.organization.name}}",
+          {% endif %}
         {% endfor %}
       {% endif %}
       {%- if controller_workflows is defined -%}
         {% for workflow in controller_workflows %}
-            {%- if workflow.organization -%}
+            {%- if workflow.organization is defined -%}
             "{{workflow.organization.name}}",
             {% endif %}
         {% endfor %}
@@ -30,6 +36,9 @@
 
   - debug:
       msg: "{{organizations_list_names}}"
+    tags:
+      - debug
+      - debug_organizations
       
   - name: Export organizations tower
     awx.awx.export:
@@ -63,12 +72,18 @@
 
   - debug:
       msg: "{{controller_organizations_content}}"
+    tags:
+      - debug
+      - debug_organizations
 
   - set_fact:
       controller_organizations: "{{controller_organizations_content.controller_organizations}}"
 
   - debug:
       msg: "{{controller_organizations}}"
+    tags:
+      - debug
+      - debug_organizations
 
   - copy: content="{{ controller_organizations_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_organizations.yml"
 

@@ -1,19 +1,47 @@
 - set_fact:
     export_output_projects: []
     export_output_projects_aux2: []
+    list_projects: |
+      [
+        {% for jobtemplate in export_job_templates_output %}
+        {
+          "name": "{{jobtemplate.project.name}}",
+          "organization": "{{jobtemplate.project.organization.name}}"
+        },
+        {% endfor %}
+        {% for project in list_projects_execute|default([]) %}
+        {
+          "name": "{{project.name}}",
+          "organization": "{{project.organization}}"
+        },
+        {% endfor %}
+      ]
+
+- debug:
+    msg: "{{list_projects}}"
+  tags:
+    - debug
+    - debug_projects
+
+#- name: pause
+#  ansible.builtin.pause:
+#    minutes: 5
 
 - name: Export projects tower
   awx.awx.export:
-    projects: "{{ item.project.name }}"
+    projects: "{{ item.name }}"
     controller_host: "{{ controller_hostname_old }}"
     controller_username: "{{ controller_username_old }}"
     controller_password: "{{ controller_password_old }}"
     validate_certs: "{{ controller_validate_certs_old }}"
   register: export_output_projects_aux
-  loop: "{{export_job_templates_output}}"
+  loop: "{{list_projects|unique}}"
 
 - debug:
     msg: "{{export_output_projects_aux}}"
+  tags:
+    - debug
+    - debug_projects
 
 - set_fact:
     export_output_projects_aux2: "{{export_output_projects_aux2|union(item.assets.projects)}}"
@@ -21,13 +49,19 @@
 
 - debug:
     msg: "{{export_output_projects_aux2}}"
+  tags:
+    - debug
+    - debug_projects
 
 - set_fact:
-    export_output_projects: "{{export_output_projects|union(export_output_projects_aux2|selectattr('name','eq',item.project.name)|selectattr('organization.name','eq',item.project.organization.name))}}"
-  loop: "{{export_job_templates_output}}"
+    export_output_projects: "{{export_output_projects|union(export_output_projects_aux2|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
+  loop: "{{list_projects|unique}}"
 
 - debug:
     msg: "{{export_output_projects}}"
+  tags:
+    - debug
+    - debug_projects
 
 
 - set_fact:
@@ -63,12 +97,18 @@
 
 - debug:
     msg: "{{controller_projects_content}}"
+  tags:
+    - debug
+    - debug_projects
 
 - set_fact:
     controller_projects: "{{controller_projects_content.controller_projects}}"
 
 - debug:
     msg: "{{controller_projects}}"
+  tags:
+    - debug
+    - debug_projects
 
 - copy: content="{{ controller_projects_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_projects.yml"
     

@@ -11,9 +11,9 @@
 
 - name: Git checkout
   ansible.builtin.git:
-    repo: 'git@github.com:adelahozredhat/iasc_projects_demo_example.git'
+    repo: 'git@github.axa.com:axaes-ops/axaes-aap-iaas-code.git'
     dest: repo_dest
-    version: master
+    version: main
 
 
 - name: call the slave playbook
@@ -49,6 +49,12 @@
     - name: controller_inventory_sources
       encrypt: false
       config: "{{controller_inventory_sources_content| default([]) }}"
+    - name: controller_labels
+      encrypt: false
+      config: "{{controller_labels_content| default([]) }}"
+    - name: controller_notifications
+      encrypt: false
+      config: "{{controller_notifications| default([]) }}"
 
 - name: Publish the changes
   ansible.scm.git_publish:

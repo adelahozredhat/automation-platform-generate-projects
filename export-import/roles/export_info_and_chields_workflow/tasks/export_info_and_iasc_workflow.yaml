@@ -29,7 +29,7 @@
           "inventory": {{workflow_info.inventory}},
           {% endif %}
           {%- if workflow_info.limit -%}
-          "limit": {{workflow_info.limit}},
+          "limit": "{{workflow_info.limit}}",
           {% endif %}
           "name": "{{workflow_info.name}}",
           {%- if workflow_info.natural_key | from_yaml -%}
@@ -40,7 +40,17 @@
           {% endif %}
           "related":
           {
-            "labels": {{workflow_info.related.labels}},
+            "labels": 
+            [
+            {% for workflow_labels_info in workflow_info.related.labels %}
+              {
+              "name": "{{workflow_labels_info.name}}",
+              "organization": {
+                "name": "{{workflow_labels_info.organization.name}}"
+              } 
+              },
+            {% endfor %}
+            ],
             "notification_templates_approvals": {{workflow_info.related.notification_templates_approvals}},
             "notification_templates_error": {{workflow_info.related.notification_templates_error}},
             "notification_templates_started": {{workflow_info.related.notification_templates_started}},
@@ -74,20 +84,31 @@
               {%- if workflow_nodes_info.job_type -%}
               "job_type": {{workflow_nodes_info.job_type}},
               {% endif %}
+              {%- if workflow_nodes_info.limit -%}
               "limit": "{{workflow_nodes_info.limit}}",
+              {% endif %}
               {%- if workflow_nodes_info.natural_key | from_yaml -%}
               "natural_key": {{workflow_nodes_info.natural_key | from_yaml}},
               {% endif %}
               {%- if workflow_nodes_info.related | from_yaml -%}
               "related": {{workflow_nodes_info.related | from_yaml}},
               {% endif %}
+              {%- if workflow_nodes_info.related.create_approval_template is defined -%}
+              "unified_job_template": {
+                "name": "{{ workflow_nodes_info.related.create_approval_template.name }}",
+                "description": "{{ workflow_nodes_info.related.create_approval_template.description }}",
+                "unified_job_type": "workflow_approval",
+                "type": "workflow_approval",
+                "timeout": {{ workflow_nodes_info.related.create_approval_template.timeout }}
+              },
+              {% endif %}
               {%- if workflow_nodes_info.scm_branch -%}
-              "scm_branch": {{workflow_nodes_info.scm_branch}},
+              "scm_branch": "{{workflow_nodes_info.scm_branch}}",
               {% endif %}
               {%- if workflow_nodes_info.skip_tags -%}
               "skip_tags": {{workflow_nodes_info.skip_tags}},
               {% endif %}
-              {%- if workflow_nodes_info.unified_job_template | from_yaml -%}
+              {%- if workflow_nodes_info.unified_job_template is defined and workflow_nodes_info.unified_job_template | from_yaml -%}
               "unified_job_template": {{workflow_nodes_info.unified_job_template | from_yaml}},
               {% endif %}
               {%- if workflow_nodes_info.verbosity -%}
@@ -116,48 +137,76 @@
  
 - debug:
     msg: "{{controller_workflows_content_tmp}}"
+  tags:
+    - debug
+    - debug_workflows
 
 - set_fact:
     controller_workflows_content:
       controller_workflows: "{{controller_workflows_content.controller_workflows| union(controller_workflows_content_tmp.controller_workflows)}}"
-    controller_workflows: "{{controller_workflows_content_tmp.controller_workflows}}"
+    controller_workflows: "{{controller_workflows |union(controller_workflows_content_tmp.controller_workflows)}}"
 
 - debug:
     msg: "{{controller_workflows}}"
+  tags:
+    - debug
+    - debug_workflows
 
 - set_fact: 
-    list_jobs_templates_execute: "{{ list_jobs_templates_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization.name, type: type}')| community.general.json_query('[0][?starts_with(type,`job_template`)].{name: name, organization: organization}'))}}"
-    list_inventories_execute: "{{ list_inventories_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].inventory.{name: name, organization: organization.name, type: type}')| community.general.json_query('[0][?starts_with(type,`inventory`)].{name: name, organization: organization}'))| union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.inventory.{name: name, organization: organization.name, type: type}')| community.general.json_query('[0][?starts_with(type,`inventory`)].{name: name, organization: organization}'))}}"
-    list_inventorie_sources_execute: "{{ list_inventorie_sources_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization.name, type: type}')| select() | community.general.json_query('[*][?starts_with(type,`inventory_source`)].{name: name, organization: organization}')| community.general.lists_union(flatten=true))}}"
-    unified_workflow_job_template: "{{ controller_workflows_content_tmp | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization, type: type}')| community.general.json_query('[0][?starts_with(type,`workflow_job_template`)].{name: name, organization: organization}')| difference(list_workflows) }}"
-    list_credentials_execute: "{{ list_credentials_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].related.credentials[*].{name: name, organization: organization.name, type: type}')| community.general.json_query('[0]')| select() | community.general.json_query('[*][?starts_with(type,`credential`)].{name: name, organization: organization}'))}}"
+    list_jobs_templates_execute: "{{ list_jobs_templates_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization.name, type: type}')| select() | community.general.json_query('[*][?starts_with(type,`job_template`)].{name: name, organization: organization}')| community.general.lists_union(flatten=true))}}"
+    list_inventories_execute: "{{ list_inventories_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].inventory.{name: name, organization: organization.name, type: type}')| community.general.json_query('[0][?starts_with(type,`inventory`)].{name: name, organization: organization}'))| union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.inventory.{name: name, organization: organization.name, type: type}')| community.general.json_query('[*][?starts_with(type,`inventory`)].{name: name, organization: organization}')| community.general.lists_union(flatten=true))}}"
+    list_inventorie_sources_execute: "{{ list_inventorie_sources_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization.name, type: type}') | community.general.json_query('[*][?starts_with(type,`inventory_source`)].{name: name, organization: organization}') | community.general.lists_union(flatten=true))}}"
+    unified_workflow_job_template: "{{ controller_workflows_content_tmp | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization, type: type}')| community.general.json_query('[*][?starts_with(type,`workflow_job_template`)].{name: name, organization: organization}') | community.general.lists_union(flatten=true)| difference(list_workflows) }}"
+    list_credentials_execute: "{{ list_credentials_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].related.credentials[*].{name: name, organization: organization.name, type: type}')| community.general.lists_union(flatten=true) | community.general.json_query('[*][?starts_with(type,`credential`)].{name: name, organization: organization}')|community.general.lists_union(flatten=true))}}"
+    list_projects_execute: "{{ list_projects_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization.name, type: type}')| select() | community.general.json_query('[*][?starts_with(type,`project`)].{name: name, organization: organization}')| community.general.lists_union(flatten=true))}}"
 
+- name: DEBUG
+  debug:
+    msg: "{{list_projects_execute}}"  
+  tags:
+    - debug
+    - debug_workflows
+    
+#- name: pause
+#  ansible.builtin.pause:
+#    minutes: 5
+    
 - debug:
     msg: "{{list_jobs_templates_execute}}"    
+  tags:
+    - debug
+    - debug_workflows
 
 - debug:
     msg: "{{unified_workflow_job_template}}"
+  tags:
+    - debug
+    - debug_workflows
 
 - set_fact: 
     list_workflows: "{{ list_workflows | union(unified_workflow_job_template) }}"
 
 - debug:
     msg: "{{list_workflows}}"
+  tags:
+    - debug
+    - debug_workflows
 
 - set_fact: 
     list_workflows_execute: "{{ unified_workflow_job_template}}"
 
 - debug:
     msg: "{{list_workflows_execute}}"
+  tags:
+    - debug
+    - debug_workflows
 
 - name: call the slave playbook
   include_tasks: export_info_and_iasc_workflow.yaml
   when: list_workflows_execute|length>0
 
 - set_fact: 
-    list_workflows: ""
     list_workflows_execute: ""
     unified_workflow_job_template: ""
     controller_workflows_content_tmp: ""
     export_workflow_output: ""
-

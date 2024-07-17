@@ -5,12 +5,20 @@
 
 - debug:
     msg: "{{folder_project_export_dest}}/{{item.name}}.yml"
-
+  tags:
+    - debug
+    - debug_iasc_to_repository
 - debug:
     msg: "{{item}}"
+  tags:
+    - debug
+    - debug_iasc_to_repository
 
 - debug:
     msg: "{{file_status_made}}"
+  tags:
+    - debug
+    - debug_iasc_to_repository
 
 - block:
 
@@ -34,6 +42,9 @@
 
     - debug:
         msg: "{{repo_info_controller_object}}"
+      tags:
+        - debug
+        - debug_iasc_to_repository
 
     - set_fact:
         object_new: '{"{{item.name}}": {{ item.config[item.name] | union(repo_info_controller_object[item.name]) }}}'

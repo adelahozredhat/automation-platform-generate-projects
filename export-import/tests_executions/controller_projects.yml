@@ -1,0 +1,16 @@
+controller_projects:
+- allow_override: false
+  credential: GitHub
+  description: OS repo team
+  local_path: _10__git_test154739
+  name: Infra-Repo-develop
+  organization: {name: AXA_OPs_Infrastructure, type: organization}
+  scm_branch: develop
+  scm_clean: true
+  scm_delete_on_update: false
+  scm_refspec: ''
+  scm_type: git
+  scm_update_cache_timeout: 0
+  scm_update_on_launch: false
+  scm_url: https://github.axa.com/axaes-ops/axaes-ansibletower-linux.git
+  timeout: 0
