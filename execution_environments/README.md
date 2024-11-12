@@ -1,0 +1,1 @@
+ansible-playbook playbook.yaml --vault-password-file ../../../.vault_password

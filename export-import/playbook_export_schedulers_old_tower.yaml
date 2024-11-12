@@ -1,0 +1,54 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    folder_project_export_dest: "tests_executions"
+    vault_file: "../.vault_password"
+  vars_files:
+    - vault.yaml
+  tasks:
+
+    - name: Queue build of a project in Jenkins
+      ansible.builtin.uri:
+        url: "https://{{ controller_hostname_old }}/api/v2/"
+        user: "{{ controller_username_old }}"
+        password: "{{ controller_password_old }}"
+        method: GET
+        force_basic_auth: true
+        validate_certs: "{{controller_validate_certs_old}}"
+      register: controller_metrics
+      environment:
+        HTTP_PROXY: ""
+        HTTPS_PROXY: ""
+        NO_PROXY: ""
+        http_proxy: ""
+        https_proxy: ""
+        no_proxy: ""
+
+    - debug:
+        msg: "{{controller_metrics}}"
+
+    - name: Creates directory
+      ansible.builtin.file:
+        path: "{{folder_project_export_dest}}"
+        state: directory
+
+    - name: Export schedules tower
+      awx.awx.export:
+        schedules: "all"
+        controller_host: "{{ controller_hostname_old }}"
+        controller_username: "{{ controller_username_old }}"
+        controller_password: "{{ controller_password_old }}"
+        validate_certs: "{{ controller_validate_certs_old }}"
+      register: export_job_templates_output_aux
+
+    - debug:
+        msg: "{{export_job_templates_output_aux}}"
+
+    - name: Export to CSV
+      lineinfile:
+        dest: exported_jobtemplate_old_tower.csv
+        line: '{name: "{{ item.name }}";{{ item.name }};'
+        create: yes
+      loop: "{{export_job_templates_output_aux.assets.schedules}}"
+

@@ -1,0 +1,256 @@
+- set_fact:
+    export_output_credentials: []
+    export_output_credentials_aux2: []
+    export_output_source_credential: []
+    credentials_list: |-
+      [
+      {% for jobtemplates in export_job_templates_output %}
+        {% for credential_list in jobtemplates.related.credentials %}
+        {%- if credential_list.name is defined -%}
+          {%- if credential_list.name != "Demo Credential" -%}
+          {
+          {%- if credential_list.organization.name is defined -%}
+          "organization": "{{credential_list.organization.name}}",
+          {% endif %}
+          "name": "{{credential_list.name}}"
+          },
+          {% endif %}
+        {% endif %}
+        {% endfor %}
+      {% endfor %}
+      {% for projects in export_output_projects %}
+        {%- if projects.credential is defined -%}
+        {%- if projects.credential.name is defined -%}
+          {%- if projects.credential.name != "GitHub" -%}
+          {
+          {%- if projects.credential.organization.name is defined -%}
+          "organization": "{{projects.credential.organization.name}}",
+          {% endif %}
+          "name": "{{projects.credential.name}}"
+          },
+          {% endif %}
+        {% endif %}
+        {% endif %}
+      {% endfor %}
+      {%- if export_output_inventorie_sources_aux_workflow is defined -%}
+      {% for inventory_source_result in export_output_inventorie_sources_aux_workflow.results %}
+        {% for inventory_sources_info in inventory_source_result.assets.inventory_sources %}
+          {%- if inventory_sources_info.credential -%}
+          {%- if inventory_sources_info.credential,name is defined -%}
+            {%- if inventory_sources_info.credential.name != "GitHub" -%}
+            {
+            {%- if inventory_sources_info.credential.organization.name is defined -%}
+            "organization": "{{inventory_sources_info.credential.organization.name}}",
+            {% endif %}
+            "name": "{{inventory_sources_info.credential.name}}"
+            },
+            {% endif %}
+          {% endif %}
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+      {% endif %}
+      {% for credentials_workflow_nodes in list_credentials_execute|default([]) %}
+        {%- if credentials_workflow_nodes.name is defined -%}
+        {%- if credentials_workflow_nodes.name != "GitHub" -%}
+          {
+          "name": "{{credentials_workflow_nodes.name}}",
+          "organization": "{{credentials_workflow_nodes.organization}}"
+          },
+        {% endif %}
+        {% endif %}
+      {% endfor %}
+      ]
+
+- name: CREDENTIAL LIST
+  debug:
+    msg: "{{credentials_list}}"
+  tags:
+    - debug
+    - debug_credentials
+
+- block:
+    
+  - name: Export credentials tower
+    awx.awx.export:
+      credentials: "{{ item.name }}"
+      controller_host: "{{ controller_hostname_old }}"
+      controller_username: "{{ controller_username_old }}"
+      controller_password: "{{ controller_password_old }}"
+      validate_certs: "{{ controller_validate_certs_old }}"
+    register: export_output_credentials_aux
+    loop: "{{credentials_list}}"
+
+  - debug:
+      msg: "{{export_output_credentials_aux}}"
+    tags:
+      - debug
+      - debug_credentials
+
+  - set_fact:
+      export_output_credentials_aux2: "{{export_output_credentials_aux2|union(item.assets.credentials)}}"
+    loop: "{{export_output_credentials_aux.results}}"
+
+  - debug:
+      msg: "{{export_output_credentials_aux2}}"
+    tags:
+      - debug
+      - debug_credentials
+
+  - set_fact:
+      export_output_credentials: "{{export_output_credentials|union(export_output_credentials_aux2|selectattr('name','eq',item.name)|selectattr('organization.name','defined')|selectattr('organization.name','eq',item.organization) )}}"
+    when: item.organization is defined
+    loop: "{{credentials_list}}"
+
+  - set_fact:
+      export_output_credentials: "{{export_output_credentials|union(export_output_credentials_aux2|selectattr('name','eq',item.name))}}"
+    when: item.organization is undefined
+    loop: "{{credentials_list}}"
+    
+  - debug:
+      msg: "{{export_output_credentials}}"
+    tags:
+      - debug
+      - debug_credentials
+
+  - debug:
+      msg: "{{credential_vaults}}"
+    when: credential_vaults is defined
+    tags:
+      - debug
+      - debug_credentials
+
+
+  - set_fact:
+      controller_credentials_content: |-
+        {"controller_credentials":
+          [
+          {% for credential in export_output_credentials %}
+            {
+            "name": "{{credential.name}}",
+            "credential_type": "{{credential.credential_type.name}}",
+            "description": "{{credential.description}}",
+            {%- if credential_vaults is defined and credential.organization.name is defined and credential_vaults[credential.name] is defined and credential_vaults[credential.name][credential.organization.name] is defined and credential_vaults [credential.name][credential.organization.name].inputs is defined-%}
+            "inputs": {{credential_vaults[credential.name][credential.organization.name].inputs}},
+            {% else %}
+            "inputs": {{credential.inputs|replace("$encrypted$","")}},
+            {% endif %}
+            {%- if credential.organization.name is defined-%}
+            "organization": "{{credential.organization.name}}"
+            {% else %}
+            "organization": "Default"
+            {% endif %}
+            },
+          {% endfor %}
+          ]
+        }
+
+  - debug:
+      msg: "{{controller_credentials_content}}"
+    tags:
+      - debug
+      - debug_credentials
+
+  - set_fact:
+      controller_credentials: "{{controller_credentials_content.controller_credentials}}"
+
+  - debug:
+      msg: "{{controller_credentials}}"
+    tags:
+      - debug
+      - debug_credentials
+
+  - copy: content="{{ controller_credentials_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_credentials.yml"
+
+  - name: Generate image execution environment with ansible-builder
+    ansible.builtin.shell: 
+      cmd: "ansible-vault encrypt {{folder_project_export_dest}}/controller_credentials.yml --vault-password-file {{vault_file}}"
+      
+  - name: Export credential_types tower
+    awx.awx.export:
+      credential_types: "{{ item.credential_type.name }}"
+      controller_host: "{{ controller_hostname_old }}"
+      controller_username: "{{ controller_username_old }}"
+      controller_password: "{{ controller_password_old }}"
+      validate_certs: "{{ controller_validate_certs_old }}"
+    register: export_output_credential_types
+    loop: "{{export_output_credentials}}"
+
+  - set_fact:
+      controller_credential_types_content: |-
+        {"controller_credential_types":
+          [
+          {% for result in export_output_credential_types.results %}
+            {% for credential_type in result.assets.credential_types %}
+              {%- if credential_type.name != "Machine" and credential_type.name != "Source Control" and credential_type.name != "Network" and credential_type.name != "Vault" and credential_type.name != "Microsoft Azure Resource Manager" and credential_type.name != "Amazon Web Services" and credential_type.name != "Ansible Tower" -%}
+              {
+              "description": "{{credential_type.description}}",
+              "injectors": {{credential_type.injectors| replace('{{','{  {')}},
+              "inputs": {{credential_type.inputs}},
+              "kind": "{{credential_type.kind}}",
+              "name": "{{credential_type.name}}",
+              },
+              {% elif credential_type.name == "Ansible Tower" %}
+              {
+              "description": "{{credential_type.description}}",
+              "injectors": {{credential_type.injectors| replace('{{','{  {')}},
+              "inputs": 
+              {
+              "fields":
+              [
+              {% for credential_type_fields in credential_type.inputs.fields %}
+              {
+              {%- if credential_type_fields.help_text is defined -%}
+              "help_text": "{{credential_type_fields.help_text}}",
+              {% endif %}
+              "label": "{{credential_type_fields.label}}",
+              "type": "{{credential_type_fields.type}}",
+              {%- if credential_type_fields.secret is defined and credential_type_fields.secret-%}
+              "secret": {{credential_type_fields.secret}},
+              {% endif %}
+              "id": "{{credential_type_fields.id}}"
+              },
+              {% endfor %}
+              ],
+              "required": {{credential_type.inputs.required}}
+              },
+              "kind": "{{credential_type.kind}}",
+              "name": "{{credential_type.name}}",
+              },
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+          ]
+        }
+
+  - debug:
+      msg: "{{controller_credential_types_content}}"
+    tags:
+      - debug
+      - debug_credentials
+
+  - set_fact:
+      controller_credential_types: "{{controller_credential_types_content.controller_credential_types}}"
+
+  - debug:
+      msg: "{{controller_credential_types}}"
+    tags:
+      - debug
+      - debug_credentials
+
+  - copy: content="{{ controller_credential_types_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_credential_types.yml"
+
+
+  when: credentials_list|length>0
+
+- name: Export Inputs Source Credentials
+  include_tasks: input_source_credential.yaml
+  loop: "{{ credentials_list }}"
+
+- name: set facts
+  set_fact:
+    controller_credential_input_sources: "{{ export_output_source_credential }}"
+    controller_credential_input_sources_content: 
+      controller_credential_input_sources: "{{ export_output_source_credential }}"
+
+- copy: content="{{ controller_credential_input_sources_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_credential_input_sources.yml"

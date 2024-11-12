@@ -1,0 +1,158 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars:
+    list_workflows_execute: "{{ list_workflows }}"
+    folder_project_export_dest: "{{ folder_project_export_dest_arg|default('tests_executions') }}"
+    relation_ve_ee:
+      "/var/lib/awx/venv/ansible/": "ee-ansible"
+      "/var/lib/awx/venv/applications_env/": "ee-applications_env"
+      "/var/lib/awx/venv/applications_env_python3/": "ee-applications_env_python3"
+      "/var/lib/awx/venv/cloud_azure/": "ee-cloud_azure"
+      "/var/lib/awx/venv/cloud_azure2/": "ee-cloud_azure2"
+      "/var/lib/awx/venv/collection_fetch_repo/": "ee-collection_fetch_repo"
+      "/var/lib/awx/venv/networking_env/": "ee-networking_env"
+      "/var/lib/awx/venv/networking_f5_bigip/": "ee-networking_f5_bigip"
+      "/var/lib/awx/venv/openshift/": "ee-openshift"
+      "/var/lib/awx/venv/tower_export/": "ee-tower_export"
+      "/var/lib/awx/venv/networking_aos_cx/": "ee-networking_aos_cx"
+      "/var/lib/awx/venv/applications_env_phyton3_report_monitoring/": "ee-applications_env_phyton3_report_monitoring"
+    vault_file: "../.vault_password"
+  vars_files:
+    - vault.yaml
+  tasks:
+
+    - set_fact: 
+        list_jobs_templates: []
+        list_workflows: "{{list_workflows_execute}}"
+
+    - name: Queue build of a project in Jenkins
+      ansible.builtin.uri:
+        url: "https://{{ controller_hostname_old }}/api/v2/"
+        user: "{{ controller_username_old }}"
+        password: "{{ controller_password_old }}"
+        method: GET
+        force_basic_auth: true
+        validate_certs: "{{controller_validate_certs_old}}"
+      register: controller_metrics
+      environment:
+        HTTP_PROXY: ""
+        HTTPS_PROXY: ""
+        NO_PROXY: ""
+        http_proxy: ""
+        https_proxy: ""
+        no_proxy: ""
+
+    - debug:
+        msg: "{{controller_metrics}}"
+      tags:
+        - debug
+
+    - name: Creates directory
+      ansible.builtin.file:
+        path: "{{folder_project_export_dest}}"
+        state: directory
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_workflow
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_job_template
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_projects   
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_inventories  
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_inventories_sources
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_credentials 
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_organizations 
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_labels
+
+    - name: call the slave playbook
+      include_role: 
+        name: export_info_and_chields_notifications
+
+    #- name: call the slave playbook
+    #  include_role: 
+    #    name: export_info_and_chields_schedulers 
+
+- hosts: localhost
+  gather_facts: false
+  vars:
+    controller_configuration_async_retries: 90
+  vars_files:
+    - vault.yaml
+
+  pre_tasks:
+    - name: "Setup authentication (block)"
+      block:
+        - name: "Get the Authentication Token for the future requests"
+          ansible.builtin.uri:
+            url: "https://{{ controller_hostname }}/api/v2/tokens/"
+            user: "{{ controller_username }}"
+            password: "{{ controller_password }}"
+            method: POST
+            force_basic_auth: true
+            validate_certs: "{{ controller_validate_certs }}"
+            status_code: 201
+          register: authtoken_res
+
+        - name: "Set the oauth token to be used since now"
+          ansible.builtin.set_fact:
+            controller_oauthtoken: "{{ authtoken_res.json.token }}"
+            controller_oauthtoken_url: "{{ authtoken_res.json.url }}"
+      no_log: "{{ controller_configuration_filetree_read_secure_logging | default('false') }}"
+      when: controller_oauthtoken is not defined
+      tags:
+        - always
+  roles:
+    - {role: infra.controller_configuration.dispatch}
+
+  post_tasks:
+    - name: "Delete the Authentication Token used"
+      ansible.builtin.uri:
+        url: "https://{{ controller_hostname }}{{ controller_oauthtoken_url }}"
+        user: "{{ controller_username }}"
+        password: "{{ controller_password }}"
+        method: DELETE
+        force_basic_auth: true
+        validate_certs: "{{ controller_validate_certs }}"
+        status_code: 204
+      when: controller_oauthtoken_url is defined
+
+
+- name: Mix with repo
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vault.yaml
+  vars:
+    folder_project_export_dest: "{{ folder_project_export_dest_arg|default('tests_executions') }}"
+    vault_file: "../.vault_password"
+
+  roles:
+    - {role: update_iasc_to_repository}
+
+  post_tasks:
+    - name: Delete temp execution files
+      ansible.builtin.file:
+        path: "{{ folder_project_export_dest }}"
+        state: absent
+...

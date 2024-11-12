@@ -1,0 +1,100 @@
+
+
+- set_fact:
+    organizations_list_names: |-
+      [
+      {%- if export_job_templates_output is defined -%}
+        {% for jobtemplates in export_job_templates_output %}
+          "{{jobtemplates.natural_key.organization.name}}",
+        {% endfor %}
+      {% endif %}
+      {%- if export_output_projects is defined -%}
+        {% for projects in export_output_projects %}
+          {%- if projects.organization.name is defined -%}
+          "{{projects.organization.name}}",
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+      {% for inventory in export_output_inventories %}
+        {%- if inventory.organization.name is defined -%}
+        "{{inventory.organization.name}}",
+        {% endif %}
+      {% endfor %}
+      {%- if export_output_credentials is defined -%}
+        {% for credential in export_output_credentials %}
+          {%- if credential.organization.name is defined -%}
+           "{{credential.organization.name}}",
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+      {%- if controller_workflows is defined -%}
+        {% for workflow in controller_workflows %}
+            {%- if workflow.organization is defined -%}
+            "{{workflow.organization.name}}",
+            {% endif %}
+        {% endfor %}
+      {% endif %}
+      ]
+
+- block:
+
+  - debug:
+      msg: "{{organizations_list_names}}"
+    tags:
+      - debug
+      - debug_organizations
+      
+  - name: Export organizations tower
+    awx.awx.export:
+      organizations: "{{ organizations_list_names }}"
+      controller_host: "{{ controller_hostname_old }}"
+      controller_username: "{{ controller_username_old }}"
+      controller_password: "{{ controller_password_old }}"
+      validate_certs: "{{ controller_validate_certs_old }}"
+    register: export_output_organizations
+
+  - set_fact:
+      controller_organizations_content: |-
+        {"controller_organizations":
+          [
+          {% for organization in export_output_organizations.assets.organizations %}
+            {%- if organization.name != "Default" -%}
+            {
+            {%- if organization.custom_virtualenv is defined -%}
+              {%- if organization.custom_virtualenv -%}
+              "default_environment": "{{relation_ve_ee[organization.custom_virtualenv]}}",
+              {% endif %}
+            {% endif %}
+            "description": "{{organization.description}}",
+            "max_hosts": {{organization.max_hosts}},
+            "name": "{{organization.name}}",
+            "natural_key": {{organization.natural_key}},
+            "related": {{organization.related}}
+            },
+            {% endif %}
+          {% endfor %}
+          ]
+        }
+
+  - debug:
+      msg: "{{controller_organizations_content}}"
+    tags:
+      - debug
+      - debug_organizations
+
+  - set_fact:
+      controller_organizations: "{{controller_organizations_content.controller_organizations}}"
+
+  - debug:
+      msg: "{{controller_organizations}}"
+    tags:
+      - debug
+      - debug_organizations
+
+  - copy: content="{{ controller_organizations_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_organizations.yml"
+
+
+  when: organizations_list_names|length>0
+
+- set_fact:
+    export_output_organizations: ""

@@ -1,0 +1,122 @@
+- set_fact:
+    export_output_inventories: []
+    export_output_inventories_aux2: []
+
+- name: Export inventory tower
+  awx.awx.export:
+    inventory: "{{ item.inventory.name }}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_output_inventories_aux
+  when: 
+  - item.inventory is defined
+  - item.inventory
+  loop: "{{export_job_templates_output|default([])|union(controller_workflows|default([]))}}"
+
+- name: Export inventory tower from workflow
+  awx.awx.export:
+    inventory: "{{ item.name }}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_output_inventories_aux_workflow
+  loop: "{{list_inventories_execute|default([])}}"
+
+- name: Export inventory tower from Schedules
+  awx.awx.export:
+    inventory: "{{ item.inventory }}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_output_inventories_aux_schedules
+  when: 
+  - item.inventory is defined
+  - item.inventory
+  loop: "{{controller_schedules|default([])}}"
+
+- debug:
+    msg: "{{export_output_inventories_aux}}"
+  tags:
+    - debug
+    - debug_inventories
+
+- set_fact:
+    export_output_inventories_aux2: "{{export_output_inventories_aux2|union(item.assets.inventory)}}"
+  when: item.assets is defined
+  loop: "{{export_output_inventories_aux.results|union(export_output_inventories_aux_workflow.results) }}"
+
+- debug:
+    msg: "{{export_output_inventories_aux2}}"
+  tags:
+    - debug
+    - debug_inventories
+
+- set_fact:
+    export_output_inventories: "{{export_output_inventories|union(export_output_inventories_aux2|selectattr('name','eq',item.inventory.name)|selectattr('organization.name','eq',item.inventory.organization.name))}}"
+  when: 
+    - item.inventory is defined 
+    - item.inventory
+  loop: "{{export_job_templates_output|default([])|union(controller_workflows|default([]))}}"
+
+- set_fact:
+    export_output_inventories: "{{export_output_inventories|union(export_output_inventories_aux2|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
+  loop: "{{list_inventories_execute|default([])}}"
+
+- set_fact:
+    export_output_inventories: "{{export_output_inventories|union(item.assets.inventory)}}"
+  when: item.assets is defined
+  loop: "{{export_output_inventories_aux_schedules.results}}"
+
+
+- debug:
+    msg: "{{export_output_inventories}}"
+  tags:
+    - debug
+    - debug_inventories
+
+
+- set_fact:
+    controller_inventories_content: |-
+      {"controller_inventories":
+        [
+        {% for inventory_info in export_output_inventories %}
+          {
+          "description": "{{inventory_info.description}}",
+          {%- if inventory_info.host_filter -%}
+          "host_filter": "{{inventory_info.host_filter}}",
+          {% endif %}
+          "kind": "{{inventory_info.kind}}",
+          "name": "{{inventory_info.name}}",
+          "organization": {{inventory_info.organization}},
+          {%- if inventory_info.variables | from_yaml -%}
+          "variables": {{inventory_info.variables| from_yaml }}
+          {% endif %}
+          },
+        {% endfor %}
+        ]
+      }
+
+- debug:
+    msg: "{{controller_inventories_content}}"
+  tags:
+    - debug
+    - debug_inventories
+
+- set_fact:
+    controller_inventories: "{{controller_inventories_content.controller_inventories}}"
+
+- debug:
+    msg: "{{controller_inventories}}"
+  tags:
+    - debug
+    - debug_inventories
+
+- copy: content="{{ controller_inventories_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_inventories.yml"
+
+- set_fact:
+    export_output_inventories_aux: ""
+    export_output_inventories_aux_workflow: ""

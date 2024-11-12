@@ -1,0 +1,78 @@
+- name: Export Scheduler tower
+  awx.awx.export:
+    schedules: "{{ list_schedulers_execute }}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_output_scheduler
+
+- debug:
+    msg: "{{export_output_scheduler}}"
+  tags:
+    - debug
+    - debug_schedulers
+
+- set_fact:
+    controller_schedules_content: |-
+      {"controller_schedules":
+        [
+          {% for schedule in export_output_scheduler.assets.schedules %}
+            {
+            "description": "{{schedule.description}}",
+            {%- if schedule.diff_mode  -%}
+            "diff_mode": {{schedule.diff_mode}},
+            {% endif %}
+            "enabled": false,
+            {%- if schedule.extra_data | from_yaml -%}
+            "extra_data": {{schedule.extra_data| from_yaml }},
+            {% endif %}
+            {%- if schedule.inventory is defined and schedule.inventory.name is defined -%}
+            "inventory": "{{schedule.inventory.name}}",
+            {% endif %}
+            {%- if schedule.job_tags-%}
+            "job_tags": {{schedule.job_tags}},
+            {% endif %}
+            {%- if schedule.job_type-%}
+            "job_type": {{schedule.job_type}},
+            {% endif %}
+            {%- if schedule.limit-%}
+            "limit": "{{schedule.limit}}",
+            {% endif %}
+            "name": "{{schedule.name}}",
+            "rrule": "{{schedule.rrule}}",
+            {%- if schedule.scm_branch-%}
+            "scm_branch": {{schedule.scm_branch}},
+            {% endif %}
+            {%- if schedule.skip_tags-%}
+            "skip_tags": {{schedule.skip_tags}},
+            {% endif %}
+            {%- if schedule.verbosity-%}
+            "verbosity": {{schedule.verbosity}},
+            {% endif %}
+            "unified_job_template": "{{schedule.unified_job_template.name}}"
+            },
+          {% endfor %}
+        ]
+      }
+
+- debug:
+    msg: "{{controller_schedules_content}}"
+  tags:
+    - debug
+    - debug_schedulers
+
+- block:
+
+  - set_fact:
+      controller_schedules: "{{controller_schedules_content.controller_schedules}}"
+
+  - debug:
+      msg: "{{controller_schedules}}"
+    tags:
+      - debug
+      - debug_schedulers
+
+  - copy: content="{{ controller_schedules_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_schedules.yml"
+
+  when: controller_schedules_content.controller_schedules|length>0

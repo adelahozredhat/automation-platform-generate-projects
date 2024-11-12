@@ -1,0 +1,255 @@
+- set_fact:
+    salto_de_linea: "\\n"
+
+- name: "Export workflow tower {{list_workflows_execute| community.general.json_query('[*].name')}}"
+  awx.awx.export:
+    workflow_job_templates: "{{list_workflows_execute| community.general.json_query('[*].name')}}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_workflow_output
+
+- debug:
+    msg: "{{export_workflow_output}}"
+
+- set_fact:
+    controller_workflows_content_tmp: |-
+      {"controller_workflows":
+        [
+        {% for workflow_info in export_workflow_output.assets.workflow_job_templates %}
+          {
+          "allow_simultaneous": {{workflow_info.allow_simultaneous}},
+          "ask_inventory_on_launch": {{workflow_info.ask_inventory_on_launch}},
+          "ask_limit_on_launch": {{workflow_info.ask_limit_on_launch}},
+          "ask_scm_branch_on_launch": {{workflow_info.ask_scm_branch_on_launch}},
+          "ask_variables_on_launch": {{workflow_info.ask_variables_on_launch}},
+          "description": "{{workflow_info.description}}",
+          {%- if workflow_info.extra_vars | from_yaml -%}
+          "extra_vars": {{workflow_info.extra_vars| from_yaml }},
+          {% endif %}
+          {%- if workflow_info.inventory -%}
+          "inventory": {{workflow_info.inventory}},
+          {% endif %}
+          {%- if workflow_info.limit -%}
+          "limit": "{{workflow_info.limit}}",
+          {% endif %}
+          "name": "{{workflow_info.name}}",
+          {%- if workflow_info.natural_key | from_yaml -%}
+          "natural_key": {{workflow_info.natural_key | from_yaml}},
+          {% endif %}
+          {%- if workflow_info.organization | from_yaml -%}
+          "organization": {{workflow_info.organization | from_yaml}},
+          {% endif %}
+          {%- if workflow_info.related.survey_spec -%}
+          "survey_spec": 
+          {
+            "description": "",
+            "name": "",                            
+            "spec":
+            [
+            {% for survey_list in workflow_info.related.survey_spec.spec %}
+            {
+              {%- if survey_list.choices -%}
+              "choices": 
+              [
+                {% for choices_list in survey_list.choices.splitlines(False) %}
+                "{{choices_list}}",
+                {% endfor %}
+              ],
+              {% endif %}
+              {%- if survey_list.type == 'multiselect' -%}
+              "default": "{{ survey_list.default.splitlines(False)|join(salto_de_linea) }}", 
+              {%- elif survey_list.type == 'integer' -%}
+              "default": {{survey_list.default}},
+              {% elif survey_list.type != 'password' %}
+              "default": "{{survey_list.default}}", 
+              {% endif %}
+              {%- if survey_list.max -%}
+              "max": {{survey_list.max}},
+              {% endif %}
+              {%- if survey_list.min -%}
+              "min": {{survey_list.min}}, 
+              {% endif %}
+              "question_description": "{{survey_list.question_description}}",
+              "question_name": "{{survey_list.question_name}}", 
+              "required": {{survey_list.required}}, 
+              "type": "{{survey_list.type}}", 
+              "variable": "{{survey_list.variable}}"
+            },
+            {% endfor %}
+            ]
+          },
+          {% endif %}
+          "related":
+          {
+            "labels": 
+            [
+            {% for workflow_labels_info in workflow_info.related.labels %}
+              {
+              "name": "{{workflow_labels_info.name}}",
+              "organization": {
+                "name": "{{workflow_labels_info.organization.name}}"
+              } 
+              },
+            {% endfor %}
+            ],
+            "notification_templates_approvals": {{workflow_info.related.notification_templates_approvals}},
+            "notification_templates_error": {{workflow_info.related.notification_templates_error}},
+            "notification_templates_started": {{workflow_info.related.notification_templates_started}},
+            "notification_templates_success": {{workflow_info.related.notification_templates_success}},
+            "schedules": {{workflow_info.related.schedules}},
+            "workflow_nodes":
+            [
+            {% for workflow_nodes_info in workflow_info.related.workflow_nodes %}
+              {
+              "all_parents_must_converge": {{workflow_nodes_info.all_parents_must_converge}},
+              {%- if workflow_nodes_info.diff_mode -%}
+              "diff_mode": {{workflow_nodes_info.diff_mode}},
+              {% endif %}
+              "extra_data": {{workflow_nodes_info.extra_data}},
+              "identifier": "{{workflow_nodes_info.identifier}}",
+              {%- if workflow_nodes_info.inventory -%}
+              "inventory": 
+              {
+                "organization":
+                {
+                  "name": "{{workflow_nodes_info.inventory.organization.name}}",
+                  "type": "{{workflow_nodes_info.inventory.organization.type}}"
+                },
+                "name": "{{workflow_nodes_info.inventory.name}}",
+                "type": "{{workflow_nodes_info.inventory.type}}"
+              },
+              {% endif %}
+              {%- if workflow_nodes_info.job_tags -%}
+              "job_tags": {{workflow_nodes_info.job_tags}},
+              {% endif %}
+              {%- if workflow_nodes_info.job_type -%}
+              "job_type": {{workflow_nodes_info.job_type}},
+              {% endif %}
+              {%- if workflow_nodes_info.limit -%}
+              "limit": "{{workflow_nodes_info.limit}}",
+              {% endif %}
+              {%- if workflow_nodes_info.natural_key | from_yaml -%}
+              "natural_key": {{workflow_nodes_info.natural_key | from_yaml}},
+              {% endif %}
+              {%- if workflow_nodes_info.related | from_yaml -%}
+              "related": {{workflow_nodes_info.related | from_yaml}},
+              {% endif %}
+              {%- if workflow_nodes_info.related.create_approval_template is defined -%}
+              "unified_job_template": {
+                "name": "{{ workflow_nodes_info.related.create_approval_template.name }}",
+                "description": "{{ workflow_nodes_info.related.create_approval_template.description }}",
+                "unified_job_type": "workflow_approval",
+                "type": "workflow_approval",
+                "timeout": {{ workflow_nodes_info.related.create_approval_template.timeout }}
+              },
+              {% endif %}
+              {%- if workflow_nodes_info.scm_branch -%}
+              "scm_branch": "{{workflow_nodes_info.scm_branch}}",
+              {% endif %}
+              {%- if workflow_nodes_info.skip_tags -%}
+              "skip_tags": {{workflow_nodes_info.skip_tags}},
+              {% endif %}
+              {%- if workflow_nodes_info.unified_job_template is defined and workflow_nodes_info.unified_job_template | from_yaml -%}
+              "unified_job_template": {{workflow_nodes_info.unified_job_template | from_yaml}},
+              {% endif %}
+              {%- if workflow_nodes_info.verbosity -%}
+              "verbosity": {{workflow_nodes_info.verbosity}},
+              {% endif %}
+              {%- if workflow_nodes_info.workflow_job_template | from_yaml -%}
+              "workflow_job_template": {{workflow_nodes_info.workflow_job_template | from_yaml}},
+              {% endif %}
+              },
+            {% endfor %}
+            ]
+ 
+          },
+          {%- if workflow_info.scm_branch | from_yaml -%}
+          "scm_branch": "{{workflow_info.scm_branch}}",
+          {% endif %}
+          "survey_enabled": {{workflow_info.survey_enabled}},
+          {%- if workflow_info.webhook_credential | from_yaml -%}
+          "webhook_credential": {{workflow_info.webhook_credential}},
+          {% endif %}
+          "webhook_service": "{{workflow_info.webhook_service}}"
+          },
+        {% endfor %}
+        ]
+      }
+ 
+- debug:
+    msg: "{{controller_workflows_content_tmp}}"
+  tags:
+    - debug
+    - debug_workflows
+
+- set_fact:
+    controller_workflows_content:
+      controller_workflows: "{{controller_workflows_content.controller_workflows| union(controller_workflows_content_tmp.controller_workflows)}}"
+    controller_workflows: "{{controller_workflows |union(controller_workflows_content_tmp.controller_workflows)}}"
+
+- debug:
+    msg: "{{controller_workflows}}"
+  tags:
+    - debug
+    - debug_workflows
+
+- set_fact: 
+    list_jobs_templates_execute: "{{ list_jobs_templates_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization.name, type: type}')| select() | community.general.json_query('[*][?starts_with(type,`job_template`)].{name: name, organization: organization}')| community.general.lists_union(flatten=true))}}"
+    list_inventories_execute: "{{ list_inventories_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].inventory.{name: name, organization: organization.name, type: type}')| community.general.json_query('[0][?starts_with(type,`inventory`)].{name: name, organization: organization}'))| union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.inventory.{name: name, organization: organization.name, type: type}')| community.general.json_query('[*][?starts_with(type,`inventory`)].{name: name, organization: organization}')| community.general.lists_union(flatten=true))}}"
+    list_inventorie_sources_execute: "{{ list_inventorie_sources_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization.name, type: type}') | community.general.json_query('[*][?starts_with(type,`inventory_source`)].{name: name, organization: organization}') | community.general.lists_union(flatten=true))}}"
+    unified_workflow_job_template: "{{ controller_workflows_content_tmp | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization, type: type}')| community.general.json_query('[*][?starts_with(type,`workflow_job_template`)].{name: name, organization: organization}') | community.general.lists_union(flatten=true)| difference(list_workflows) }}"
+    list_credentials_execute: "{{ list_credentials_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].related.credentials[*].{name: name, organization: organization.name, type: type}')| community.general.lists_union(flatten=true) | community.general.json_query('[*][?starts_with(type,`credential`)].{name: name, organization: organization}')|community.general.lists_union(flatten=true))}}"
+    list_projects_execute: "{{ list_projects_execute | union(controller_workflows_content | community.general.json_query('controller_workflows[*].related.workflow_nodes[*].unified_job_template.{name: name, organization: organization.name, type: type}')| select() | community.general.json_query('[*][?starts_with(type,`project`)].{name: name, organization: organization}')| community.general.lists_union(flatten=true))}}"
+
+- name: DEBUG
+  debug:
+    msg: "{{list_projects_execute}}"  
+  tags:
+    - debug
+    - debug_workflows
+    
+#- name: pause
+#  ansible.builtin.pause:
+#    minutes: 5
+    
+- debug:
+    msg: "{{list_jobs_templates_execute}}"    
+  tags:
+    - debug
+    - debug_workflows
+
+- debug:
+    msg: "{{unified_workflow_job_template}}"
+  tags:
+    - debug
+    - debug_workflows
+
+- set_fact: 
+    list_workflows: "{{ list_workflows | union(unified_workflow_job_template) }}"
+
+- debug:
+    msg: "{{list_workflows}}"
+  tags:
+    - debug
+    - debug_workflows
+
+- set_fact: 
+    list_workflows_execute: "{{ unified_workflow_job_template}}"
+
+- debug:
+    msg: "{{list_workflows_execute}}"
+  tags:
+    - debug
+    - debug_workflows
+
+- name: call the slave playbook
+  include_tasks: export_info_and_iasc_workflow.yaml
+  when: list_workflows_execute|length>0
+
+- set_fact: 
+    list_workflows_execute: ""
+    unified_workflow_job_template: ""
+    controller_workflows_content_tmp: ""
+    export_workflow_output: ""

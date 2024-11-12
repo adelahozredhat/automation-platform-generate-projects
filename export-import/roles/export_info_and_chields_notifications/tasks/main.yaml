@@ -1,0 +1,67 @@
+- set_fact:
+    list_notifications: []
+
+- set_fact:
+    list_notifications: "{{list_notifications|union(item.related.notification_templates_approvals)|union(item.related.notification_templates_error)|union(item.related.notification_templates_started)|union(item.related.notification_templates_success)|unique }}"
+  loop: "{{controller_workflows|default([])}}"
+
+- set_fact:
+    list_notifications: "{{list_notifications|union(item.notification_templates_error)|union(item.notification_templates_started)|union(item.notification_templates_success)|unique }}"
+  loop: "{{controller_templates}}"
+
+
+- name: Export notifications templates tower
+  awx.awx.export:
+    notification_templates: "{{ item.name }}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_output_notifications
+  loop: "{{list_notifications}}"
+
+
+- set_fact:
+    controller_notifications_content: |-
+      {"controller_notifications":
+        [
+        {% for notications_templates_results in export_output_notifications.results %}
+          {% for notications_templates in notications_templates_results.assets.notification_templates %}
+          {
+          "name": "{{notications_templates.name}}",
+          {%- if notications_templates.organization.name is defined-%}
+          "organization": "{{notications_templates.organization.name}}",
+          {% else %}
+          "organization": "Default",
+          {% endif %}
+          "notification_type": "{{notications_templates.notification_type}}",
+          {%- if notications_templates.message is defined -%}
+          "message": {{ notications_templates.message| replace('{{','{  {') }},
+          {% endif %}
+          "notification_configuration": {{notications_templates.notification_configuration| replace('{{','{  {') }}
+          },
+          {% endfor %}
+        {% endfor %}
+        ]
+      }
+
+- debug:
+    msg: "{{controller_notifications_content}}"
+  tags:
+    - debug
+    - debug_inventories
+
+- set_fact:
+    controller_notifications: "{{controller_notifications_content.controller_notifications}}"
+
+- debug:
+    msg: "{{controller_notifications}}"
+  tags:
+    - debug
+    - debug_inventories
+
+- copy: content="{{ controller_notifications_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_notifications.yml"
+
+- set_fact:
+    list_notifications: ""
+    export_output_notifications: ""

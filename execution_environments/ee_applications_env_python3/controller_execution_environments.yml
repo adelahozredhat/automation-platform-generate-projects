@@ -1,0 +1,4 @@
+controller_execution_environments:
+- {credential: register-quaio-credential, description: venv_applications_env_python3,
+  image: 'quay.io/adelahoz/venv_applications_env_python3:latest', name: ee_applications_env_python3,
+  organization: Default}

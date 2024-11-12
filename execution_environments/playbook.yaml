@@ -1,0 +1,191 @@
+---
+- name: Export
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vault.yaml
+  vars:
+    name_image_ee: "venv_applications_env_python3"
+    name_ee: "ee_applications_env_python3"
+    vault_file: "../../../.vault_password"
+  tasks:
+
+    - name: Creates directory
+      ansible.builtin.file:
+        path: "{{name_ee}}"
+        state: directory
+
+    - name: Generate image execution environment with ansible-builder
+      ansible.builtin.shell: 
+        cmd: "ansible-builder build --container-runtime podman -t {{name_image_ee}}:latest"
+        chdir: "{{name_image_ee}}/"
+
+    - name: Build and push an image using username and password
+      containers.podman.podman_image:
+        name: "{{name_image_ee}}:latest"
+        push: true
+        username: "{{registry_user}}"
+        password: "{{ registry_password }}"
+        push_args:
+          dest: "{{registry_url}}"
+
+    - set_fact:
+        controller_credentials_object:
+          controller_credentials:
+            - name: "register-quaio-credential"
+              credential_type: "Container Registry"
+              description: "register-quaio-credential"
+              inputs: {"host": "quay.io","password": "{{ name_ee }}_text_replace","username": "adelahoz@redhat.com","verify_ssl": true}
+              organization: "Default" 
+        controller_execution_environments_object:
+          controller_execution_environments:  
+            - name: "{{name_ee}}"
+              description: "{{name_image_ee}}"
+              image: "{{registry_url}}/{{name_image_ee}}:latest"
+              credential: "register-quaio-credential"
+              organization: "Default" 
+
+    - copy: content="{{ controller_credentials_object | to_yaml}}" dest="{{name_ee}}/controller_credentials.yml"
+
+    - name: Generate image execution environment with ansible-builder
+      ansible.builtin.shell: 
+        cmd: "ansible-vault encrypt {{name_ee}}/controller_credentials.yml --vault-password-file {{vault_file}}"
+
+    - copy: content="{{ controller_execution_environments_object | to_yaml}}" dest="{{name_ee}}/controller_execution_environments.yml"
+
+
+
+    - set_fact:
+        controller_credentials: "{{controller_credentials_object.controller_credentials}}"
+        controller_execution_environments: "{{controller_execution_environments_object.controller_execution_environments}}"
+
+- name: Mix with repo
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vault.yaml
+  vars:
+    name_ee: "ee_applications_env_python3"
+    vault_file: "../../../.vault_password"
+
+  tasks:
+    - name: Creates directory
+      ansible.builtin.file:
+        path: "repo_dest"
+        state: absent
+
+    - name: Creates directory
+      ansible.builtin.file:
+        path: "repo_dest"
+        state: directory
+
+    - name: Git checkout
+      ansible.builtin.git:
+        repo: 'git@github.com:adelahozredhat/iasc_projects_demo_example.git'
+        dest: repo_dest
+        version: master
+
+    - name: Check if file exists using file module
+      ansible.builtin.stat:
+        path: "repo_dest/controller_credentials.yml"
+      register: file_status
+
+    - name: Copy file with owner and permissions
+      ansible.builtin.copy:
+        src: "{{name_ee}}/controller_credentials.yml"
+        dest: repo_dest/controller_credentials.yml
+        decrypt: false
+      when: not file_status.stat.exists
+
+    - block:
+      - name: Include vars on the repo
+        ansible.builtin.include_vars:
+          file: repo_dest/controller_credentials.yml
+          name: repo_info_controller_credentials
+
+
+      - set_fact:
+          controller_credentials_object_new:
+            controller_credentials: "{{ controller_credentials_object.controller_credentials | union(repo_info_controller_credentials.controller_credentials) }}"
+
+      - copy: content="{{ controller_credentials_object_new | to_yaml}}" dest="repo_dest/controller_credentials.yml"
+
+      - name: Generate image execution environment with ansible-builder
+        ansible.builtin.shell: 
+          cmd: "ansible-vault encrypt repo_dest/controller_credentials.yml --vault-password-file {{vault_file}}"
+
+      when: file_status.stat.exists
+
+    - name: Check if file exists using file module
+      ansible.builtin.stat:
+        path: "repo_dest/controller_execution_environments.yml"
+      register: file_status
+
+    - name: Copy file with owner and permissions
+      ansible.builtin.copy:
+        src: "{{name_ee}}/controller_execution_environments.yml"
+        dest: repo_dest/controller_execution_environments.yml
+      when: not file_status.stat.exists
+
+    - block:
+      - name: Conditionally decide to load in variables into 'plans' when x is 0, otherwise do not. (2.2)
+        ansible.builtin.include_vars:
+          file: repo_dest/controller_execution_environments.yml
+          name: repo_info_controller_execution_environments
+    
+      - set_fact:
+          controller_execution_environments_object_new:
+            controller_execution_environments: "{{ controller_execution_environments_object.controller_execution_environments | union(repo_info_controller_execution_environments.controller_execution_environments) }}"
+
+      - copy: content="{{ controller_execution_environments_object_new | to_yaml}}" dest="repo_dest/controller_execution_environments.yml"
+
+      when: file_status.stat.exists
+
+    - name: Publish the changes
+      ansible.scm.git_publish:
+        path: "repo_dest"
+
+
+- name: Import
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vault.yaml
+
+  pre_tasks:
+    - name: "Setup authentication (block)"
+      block:
+        - name: "Get the Authentication Token for the future requests"
+          ansible.builtin.uri:
+            url: "https://{{ controller_hostname }}/api/v2/tokens/"
+            user: "{{ controller_username }}"
+            password: "{{ controller_password }}"
+            method: POST
+            force_basic_auth: true
+            validate_certs: "{{ controller_validate_certs }}"
+            status_code: 201
+          register: authtoken_res
+
+        - name: "Set the oauth token to be used since now"
+          ansible.builtin.set_fact:
+            controller_oauthtoken: "{{ authtoken_res.json.token }}"
+            controller_oauthtoken_url: "{{ authtoken_res.json.url }}"
+      no_log: "{{ controller_configuration_filetree_read_secure_logging | default('false') }}"
+      when: controller_oauthtoken is not defined
+      tags:
+        - always
+  roles:
+    - {role: infra.controller_configuration.dispatch}
+
+  post_tasks:
+    - name: "Delete the Authentication Token used"
+      ansible.builtin.uri:
+        url: "https://{{ controller_hostname }}{{ controller_oauthtoken_url }}"
+        user: "{{ controller_username }}"
+        password: "{{ controller_password }}"
+        method: DELETE
+        force_basic_auth: true
+        validate_certs: "{{ controller_validate_certs }}"
+        status_code: 204
+      when: controller_oauthtoken_url is defined
+...

@@ -1,0 +1,21 @@
+- set_fact: 
+    list_workflows: "{{list_workflows_execute}}"
+    list_projects_execute: []
+    list_jobs_templates_execute: []
+    list_inventories_execute: []
+    list_inventorie_sources_execute: []
+    list_credentials_execute: []
+    controller_workflows: []
+    controller_workflows_content:
+      controller_workflows: []
+
+- name: call the slave playbook
+  include_tasks: export_info_and_iasc_workflow.yaml
+        
+- copy: content="{{ controller_workflows_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_workflows.yml"
+
+- debug:
+    msg: "{{ list_credentials_execute }}"
+  tags:
+    - debug
+    - debug_workflows

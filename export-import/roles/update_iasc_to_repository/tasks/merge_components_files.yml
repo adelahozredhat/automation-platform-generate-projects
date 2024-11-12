@@ -1,0 +1,61 @@
+- name: Check if file exists using file module
+  ansible.builtin.stat:
+    path: "{{folder_project_export_dest}}/{{item.name}}.yml"
+  register: file_status_made
+
+- debug:
+    msg: "{{folder_project_export_dest}}/{{item.name}}.yml"
+  tags:
+    - debug
+    - debug_iasc_to_repository
+- debug:
+    msg: "{{item}}"
+  tags:
+    - debug
+    - debug_iasc_to_repository
+
+- debug:
+    msg: "{{file_status_made}}"
+  tags:
+    - debug
+    - debug_iasc_to_repository
+
+- block:
+
+  - name: Check if file exists using file module
+    ansible.builtin.stat:
+      path: "repo_dest/{{item.name}}.yml"
+    register: file_status_repo
+
+  - name: Copy file with owner and permissions
+    ansible.builtin.copy:
+      src: "{{folder_project_export_dest}}/{{item.name}}.yml"
+      dest: "repo_dest/{{item.name}}.yml"
+      decrypt: false
+    when: not file_status_repo.stat.exists
+
+  - block:
+    - name: Include vars on the repo
+      ansible.builtin.include_vars:
+        file: "repo_dest/{{item.name}}.yml"
+        name: "repo_info_controller_object"
+
+    - debug:
+        msg: "{{repo_info_controller_object}}"
+      tags:
+        - debug
+        - debug_iasc_to_repository
+
+    - set_fact:
+        object_new: '{"{{item.name}}": {{ item.config[item.name] | union(repo_info_controller_object[item.name]) }}}'
+          
+    - copy: content="{{ object_new | to_yaml}}" dest="repo_dest/{{item.name}}.yml"
+
+    - name: Generate image execution environment with ansible-builder
+      ansible.builtin.shell: 
+        cmd: "ansible-vault encrypt repo_dest/{{item.name}}.yml --vault-password-file {{vault_file}}"
+      when: item.encrypt
+
+    when: file_status_repo.stat.exists
+
+  when: file_status_made.stat.exists and item.config|length>0

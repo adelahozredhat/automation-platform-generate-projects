@@ -1,0 +1,119 @@
+- set_fact:
+    export_output_projects: []
+    export_output_projects_aux2: []
+    list_projects: |
+      [
+        {% for jobtemplate in export_job_templates_output %}
+        {
+          "name": "{{jobtemplate.project.name}}",
+          "organization": "{{jobtemplate.project.organization.name}}"
+        },
+        {% endfor %}
+        {% for project in list_projects_execute|default([]) %}
+        {
+          "name": "{{project.name}}",
+          "organization": "{{project.organization}}"
+        },
+        {% endfor %}
+      ]
+
+- debug:
+    msg: "{{list_projects}}"
+  tags:
+    - debug
+    - debug_projects
+
+#- name: pause
+#  ansible.builtin.pause:
+#    minutes: 5
+
+- name: Export projects tower
+  awx.awx.export:
+    projects: "{{ item.name }}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_output_projects_aux
+  loop: "{{list_projects|unique}}"
+
+- debug:
+    msg: "{{export_output_projects_aux}}"
+  tags:
+    - debug
+    - debug_projects
+
+- set_fact:
+    export_output_projects_aux2: "{{export_output_projects_aux2|union(item.assets.projects)}}"
+  loop: "{{export_output_projects_aux.results}}"
+
+- debug:
+    msg: "{{export_output_projects_aux2}}"
+  tags:
+    - debug
+    - debug_projects
+
+- set_fact:
+    export_output_projects: "{{export_output_projects|union(export_output_projects_aux2|selectattr('name','eq',item.name)|selectattr('organization.name','eq',item.organization))}}"
+  loop: "{{list_projects|unique}}"
+
+- debug:
+    msg: "{{export_output_projects}}"
+  tags:
+    - debug
+    - debug_projects
+
+
+- set_fact:
+    controller_projects_content: |-
+      {"controller_projects":
+        [
+        {% for projects in export_output_projects %}
+          {
+          {%- if projects.custom_virtualenv is defined -%}
+          {%- if projects.custom_virtualenv -%}
+          "default_environment": "{{relation_ve_ee[projects.custom_virtualenv]}}",
+          {% endif %}
+          {% endif %}
+          "allow_override": {{projects.allow_override}},
+          {%- if projects.credential -%}
+          "credential": "{{projects.credential.name}}",
+          {% endif %}
+          "description": "{{projects.description}}",
+          "local_path": "{{projects.local_path}}",
+          "name": "{{projects.name}}",
+          "organization": {{projects.organization}},
+          "scm_branch": "{{projects.scm_branch}}",
+          "scm_clean": {{projects.scm_clean}},
+          "scm_delete_on_update": {{projects.scm_delete_on_update}},
+          "scm_refspec": "{{projects.scm_refspec}}",
+          "scm_type": "{{projects.scm_type}}",
+          "scm_update_cache_timeout": {{projects.scm_update_cache_timeout}},
+          "scm_update_on_launch": {{projects.scm_update_on_launch}},
+          "scm_url": "{{projects.scm_url}}",
+          "timeout": {{projects.timeout}},
+          },
+        {% endfor %}
+        ]
+      }
+
+- debug:
+    msg: "{{controller_projects_content}}"
+  tags:
+    - debug
+    - debug_projects
+
+- set_fact:
+    controller_projects: "{{controller_projects_content.controller_projects}}"
+
+- debug:
+    msg: "{{controller_projects}}"
+  tags:
+    - debug
+    - debug_projects
+
+- copy: content="{{ controller_projects_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_projects.yml"
+    
+- set_fact:
+    export_output_projects_aux: ""
+    export_output_projects_aux2: ""

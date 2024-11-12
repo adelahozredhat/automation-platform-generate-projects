@@ -1,0 +1,5 @@
+controller_inventories:
+- description: Prueba
+  kind: ''
+  name: Prueba
+  organization: {name: Prueba, type: organization}

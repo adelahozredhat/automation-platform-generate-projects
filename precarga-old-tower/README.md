@@ -1,0 +1,1 @@
+ansible-navigator run playbook.yaml -i inventory -m stdout --eei localhost/ansible-execution-env

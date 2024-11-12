@@ -1,0 +1,176 @@
+- set_fact:
+    export_job_templates_output: []
+    salto_de_linea: "\\n"
+
+- name: Export job_templates tower
+  awx.awx.export:
+    job_templates: "{{list_jobs_templates_execute| community.general.json_query('[*].name')}}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_job_templates_output_aux
+
+- debug:
+    msg: "{{export_job_templates_output_aux}}"
+  tags:
+    - debug
+    - debug_jobtemplates
+
+- set_fact:
+    export_job_templates_output: "{{export_job_templates_output|union(export_job_templates_output_aux.assets.job_templates|selectattr('name','eq',item.name)|selectattr('project.organization.name','eq',item.organization))}}"
+  loop: "{{list_jobs_templates_execute}}"
+
+
+- debug:
+    msg: "{{export_job_templates_output}}"
+  tags:
+    - debug
+    - debug_jobtemplates
+
+- set_fact:
+    controller_job_templates_content: |-
+      {"controller_templates":
+        [
+        {% for jobtemplates in export_job_templates_output %}
+          {
+          "ask_credential_on_launch": {{jobtemplates.ask_credential_on_launch}},
+          "ask_diff_mode_on_launch": {{jobtemplates.ask_diff_mode_on_launch}},
+          "ask_inventory_on_launch": {{jobtemplates.ask_inventory_on_launch}},
+          "ask_job_type_on_launch": {{jobtemplates.ask_job_type_on_launch}},
+          "ask_limit_on_launch": {{jobtemplates.ask_limit_on_launch}},
+          "ask_scm_branch_on_launch": {{jobtemplates.ask_scm_branch_on_launch}},
+          "ask_skip_tags_on_launch": {{jobtemplates.ask_skip_tags_on_launch}},
+          "ask_tags_on_launch": {{jobtemplates.ask_tags_on_launch}},
+          "ask_variables_on_launch": {{jobtemplates.ask_variables_on_launch}},
+          "ask_verbosity_on_launch": {{jobtemplates.ask_verbosity_on_launch}},
+          "become_enabled": {{jobtemplates.become_enabled}},
+          {%- if jobtemplates.custom_virtualenv is defined-%}
+          {%- if jobtemplates.custom_virtualenv -%}
+          "execution_environment": "{{relation_ve_ee[jobtemplates.custom_virtualenv]}}",
+          {% endif %}
+          {% endif %}
+          "description": "{{jobtemplates.description}}",
+          "diff_mode": {{jobtemplates.diff_mode}},
+          {%- if jobtemplates.extra_vars | from_yaml -%}
+          "extra_vars": {{jobtemplates.extra_vars| from_yaml }},
+          {% endif %}
+          "force_handlers": {{jobtemplates.force_handlers}},
+          "forks": {{jobtemplates.forks}},
+          "host_config_key": "{{jobtemplates.host_config_key}}",
+          {%- if jobtemplates.inventory -%}
+          "inventory": {{jobtemplates.inventory}},
+          {% else %}
+          "inventory": "",
+          {% endif %}
+          "job_slice_count": {{jobtemplates.job_slice_count}},
+          "job_tags": "{{jobtemplates.job_tags}}",
+          "job_type": "{{jobtemplates.job_type}}",
+          "limit": "{{jobtemplates.limit}}",
+          "name": "{{jobtemplates.name}}",
+          "playbook": "{{jobtemplates.playbook}}",
+          "project": {{jobtemplates.project}},
+          "scm_branch": "{{jobtemplates.scm_branch}}",
+          "skip_tags": "{{jobtemplates.skip_tags}}",
+          "start_at_task": "{{jobtemplates.start_at_task}}",
+          "survey_enabled": {{jobtemplates.survey_enabled}},
+          "timeout": {{jobtemplates.timeout}},
+          "use_fact_cache": {{jobtemplates.use_fact_cache}},
+          "verbosity": {{jobtemplates.verbosity}},
+          {%- if jobtemplates.webhook_credential -%}
+          "webhook_credential": {{jobtemplates.webhook_credential| default(omit)}},
+          {% endif %}
+          "webhook_service": "{{jobtemplates.webhook_service}}",
+          "credentials": 
+          [
+          {% for credentials_list_names in jobtemplates.related.credentials %}
+          "{{credentials_list_names.name}}",
+          {% endfor %}
+          ],
+          {%- if jobtemplates.related.notification_templates_error is defined -%}
+          "notification_templates_error": {{jobtemplates.related.notification_templates_error}},
+          {% endif %}
+          {%- if jobtemplates.related.notification_templates_started is defined -%}
+          "notification_templates_started": {{jobtemplates.related.notification_templates_started}},
+          {% endif %}
+          {%- if jobtemplates.related.notification_templates_success is defined -%}
+          "notification_templates_success": {{jobtemplates.related.notification_templates_success}},
+          {% endif %}
+          {%- if jobtemplates.related.survey_spec -%}
+          "survey_spec": 
+          {
+            "description": "",
+            "name": "",                            
+            "spec":
+            [
+            {% for survey_list in jobtemplates.related.survey_spec.spec %}
+            {
+              {%- if survey_list.choices is defined -%}
+              {%- if survey_list.choices -%}
+              "choices": 
+              [
+                {%- if survey_list.choices.splitlines is defined -%}
+                {% for choices_list in survey_list.choices.splitlines(False) %}
+                "{{choices_list}}",
+                {% endfor %}
+                {% else %}
+                {% for choices_list in survey_list.choices %}
+                "{{choices_list}}",
+                {% endfor %}
+                {% endif %}
+              ],
+              {% endif %}
+              {% endif %}
+              {%- if survey_list.type == 'multiselect' -%}
+              "default": "{{ survey_list.default.splitlines(False)|join(salto_de_linea) }}", 
+              {%- elif survey_list.type == 'integer' -%}
+              "default": {{survey_list.default}},
+              {% elif survey_list.type != 'password' %}
+              "default": "{{survey_list.default}}", 
+              {% endif %}
+              {%- if survey_list.max is defined-%}
+              {%- if survey_list.max -%}
+              "max": {{survey_list.max}},
+              {% endif %}
+              {% endif %}
+              {%- if survey_list.min is defined-%}
+              {%- if survey_list.min -%}
+              "min": {{survey_list.min}}, 
+              {% endif %}
+              {% endif %}
+              "question_description": "{{survey_list.question_description}}",
+              "question_name": "{{survey_list.question_name}}", 
+              "required": {{survey_list.required}}, 
+              "type": "{{survey_list.type}}", 
+              "variable": "{{survey_list.variable}}"
+            },
+            {% endfor %}
+            ]
+          },
+          {% endif %}
+          "allow_simultaneous": {{jobtemplates.allow_simultaneous}}
+          },
+        {% endfor %}
+        ]
+      }
+
+
+- debug:
+    msg: "{{controller_job_templates_content}}"
+  tags:
+    - debug
+    - debug_jobtemplates
+
+- set_fact:
+    controller_templates: "{{controller_job_templates_content.controller_templates}}"
+
+- debug:
+    msg: "{{controller_templates}}"
+  tags:
+    - debug
+    - debug_jobtemplates
+
+- copy: content="{{ controller_job_templates_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_templates.yml"
+
+- set_fact:
+    export_job_templates_output_aux: ""

@@ -1,0 +1,87 @@
+- set_fact:
+    export_output_inventorie_sources: []
+
+
+- name: Export inventory_sources tower from workflow
+  awx.awx.export:
+    inventory_sources: "{{ item.name }}"
+    controller_host: "{{ controller_hostname_old }}"
+    controller_username: "{{ controller_username_old }}"
+    controller_password: "{{ controller_password_old }}"
+    validate_certs: "{{ controller_validate_certs_old }}"
+  register: export_output_inventorie_sources_aux_workflow
+  loop: "{{list_inventorie_sources_execute|default([])}}"
+
+- debug:
+    msg: "{{export_output_inventorie_sources_aux_workflow}}"
+  tags:
+    - debug
+    - debug_inventories
+
+- set_fact:
+    controller_inventory_sources_content: |-
+      {"controller_inventory_sources":
+        [
+        {% for inventory_source_result in export_output_inventorie_sources_aux_workflow.results %}
+          {% for inventory_source_info in inventory_source_result.assets.inventory_sources %}
+          {
+          {%- if inventory_source_info.credential.name is defined -%}
+          "credential": "{{inventory_source_info.credential.name}}",
+          {% endif %}
+          {%- if inventory_source_info.custom_virtualenv -%}
+          "custom_virtualenv": {{inventory_source_info.custom_virtualenv}},
+          {% endif %}
+          "description": "{{inventory_source_info.description}}",
+          "enabled_value": "{{inventory_source_info.enabled_value}}",
+          "enabled_var": "{{inventory_source_info.enabled_var}}",
+          "host_filter": "{{inventory_source_info.host_filter}}",
+          {%- if inventory_source_info.inventory and inventory_source_info.inventory.name is defined-%}
+          "inventory": "{{inventory_source_info.inventory.name}}",
+          {% endif %}
+          {%- if inventory_source_info.name is defined -%}
+          "name": "{{inventory_source_info.name}}",
+          {% endif %}
+          "overwrite": {{inventory_source_info.overwrite}},
+          "overwrite_vars": {{inventory_source_info.overwrite_vars}},
+          "related": {{inventory_source_info.related}},
+          "source": "{{inventory_source_info.source}}",
+          "source_path": "{{inventory_source_info.source_path}}",
+          {%- if inventory_source_info.source_project.name is defined -%}
+          "source_project": "{{inventory_source_info.source_project.name}}",
+          {% endif %}
+          {%- if inventory_source_info.source_script is defined -%}
+          "source_script": "{{ inventory_source_info.source_script }}",
+          {% endif %}
+          {%- if inventory_source_info.source_vars -%}
+          "source_vars": {{inventory_source_info.source_vars|replace('https://10.142.22.37:8080','http://egress-http-proxy:8080') |from_yaml}},
+          {% endif %}
+          "timeout": {{inventory_source_info.timeout}},
+          "update_cache_timeout": {{inventory_source_info.update_cache_timeout}},
+          "update_on_launch": {{inventory_source_info.update_on_launch}},
+          "update_on_project_update": {{inventory_source_info.update_on_project_update}},
+          "verbosity": {{inventory_source_info.verbosity}}
+          },
+          {% endfor %}
+        {% endfor %}
+        ]
+      }
+
+- debug:
+    msg: "{{controller_inventory_sources_content}}"
+  tags:
+    - debug
+    - debug_inventories
+
+- set_fact:
+    controller_inventory_sources: "{{controller_inventory_sources_content.controller_inventory_sources}}"
+
+- debug:
+    msg: "{{controller_inventory_sources}}"
+  tags:
+    - debug
+    - debug_inventories
+
+- copy: content="{{ controller_inventory_sources_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_inventory_sources.yml"
+
+- set_fact:
+    export_output_inventorie_sources: ""
