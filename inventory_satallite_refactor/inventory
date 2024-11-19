@@ -1,5 +1,9 @@
-localhost
+localhost ansible_connection=local
 prueba
 192.168.68.150
 192.168.68.151
 192.168.68.152
+
+192.168.68.152.uspub.mdef.es
+
+192.168.68.152.usof.mdef.es

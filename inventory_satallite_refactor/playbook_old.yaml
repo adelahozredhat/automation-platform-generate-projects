@@ -67,9 +67,11 @@
 
 - hosts: localhost
   gather_facts: false
+  vars_files:
+    - vault.yaml
   tasks:
     - name: crear inventory
-      ansible.controller.inventory:
+      awx.awx.inventory:
         name: "Inventory Satellite Transform"
         description: "This inventory is adaptation from Satellite Inventory"
         organization: "Default"
@@ -97,11 +99,14 @@
     #   loop: "{{ groups['ConexionOK'] }}"
 
     - name: crear hosts asociados
-      ansible.controller.host:
+      awx.awx.host:
         name: "{{item}}"
         description: "Local Host Group"
         inventory: "Inventory Satellite Transform"
         state: present
+        controller_config_file: "~/tower_cli.cfg"
+        variables:
+          example_var: 123
         controller_host: "{{ controller_hostname }}"
         controller_username: "{{ controller_username }}"
         controller_password: "{{ controller_password }}"
