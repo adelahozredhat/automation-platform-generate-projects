@@ -1,7 +1,3 @@
-- set_fact:
-    export_output_inventorie_sources: []
-
-
 - name: Export inventory_sources tower from workflow
   awx.awx.export:
     inventory_sources: "{{ item.name }}"
@@ -82,6 +78,3 @@
     - debug_inventories
 
 - copy: content="{{ controller_inventory_sources_content | to_yaml}}" dest="{{folder_project_export_dest}}/controller_inventory_sources.yml"
-
-- set_fact:
-    export_output_inventorie_sources: ""

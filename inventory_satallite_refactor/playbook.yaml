@@ -1,0 +1,114 @@
+---
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: Example from an Ansible Playbook
+      ansible.builtin.ping:
+      register: return_ping
+      ignore_errors: true
+      ignore_unreachable: true
+
+    - debug: 
+        msg: "{{return_ping}}"
+
+    - debug: 
+        msg: "{{inventory_hostname}}"
+
+    - debug: 
+        msg: "{{ groups['all'] }}"
+
+    - debug: 
+        msg: "{{ hostvars[inventory_hostname] }}"
+    - debug: 
+        msg: "{{ group_names }}"
+
+    - name: Add a host with a non-standard port local to your machines
+      ansible.builtin.add_host:
+        name: '{{ item }}'
+        groups:
+        - ConexionOK
+      when: hostvars['{{item}}'].return_ping.unreachable == false
+      loop: "{{ groups['all'] }}"
+
+    - name: Add a host with a non-standard port local to your machines
+      ansible.builtin.add_host:
+        name: '{{ item }}.gestion.mdef.es'
+        groups:
+        - ConexionError
+      when: hostvars['{{item}}'].return_ping.unreachable == true
+      loop: "{{ groups['all'] }}"
+
+    - name: Add a host with a non-standard port local to your machines
+      ansible.builtin.add_host:
+        name: '{{ item }}.mdef.es'
+        groups:
+        - ConexionError
+      when: hostvars['{{item}}'].return_ping is defined and hostvars['{{item}}'].return_ping.unreachable == true
+      loop: "{{ groups['all'] }}"
+
+
+- hosts: ConexionError
+  gather_facts: false
+  tasks:
+    - name: Example from an Ansible Playbook
+      ansible.builtin.ping:
+      register: return_ping
+      ignore_unreachable: true
+
+    - name: Add a host with a non-standard port local to your machines
+      ansible.builtin.add_host:
+        name: '{{ inventory_hostname }}'
+        groups:
+        - ConexionOK
+      when:  hostvars['{{item}}'].return_ping.unreachable == false
+      loop: "{{ groups['all'] }}"
+
+
+
+- hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vault.yaml
+  tasks:
+    - name: crear inventory
+      awx.awx.inventory:
+        name: "Inventory Satellite Transform"
+        description: "This inventory is adaptation from Satellite Inventory"
+        organization: "Default"
+        state: present
+        controller_host: "{{ controller_hostname }}"
+        controller_username: "{{ controller_username }}"
+        controller_password: "{{ controller_password }}"
+        validate_certs: "{{ controller_validate_certs }}"
+
+
+
+    # - name: crear hosts asociados
+    #   awx.awx.group:
+    #     name: "{{tem}}"
+    #     description: "Local Host Group"
+    #     inventory: "Inventory Satellite Transform"
+    #     state: present
+    #     controller_config_file: "~/tower_cli.cfg"
+    #     variables:
+    #       example_var: 123
+    #     controller_host: "{{ controller_hostname }}"
+    #     controller_username: "{{ controller_username }}"
+    #     controller_password: "{{ controller_password }}"
+    #     validate_certs: "{{ controller_validate_certs }}"
+    #   loop: "{{ groups['ConexionOK'] }}"
+
+    - name: crear hosts asociados
+      awx.awx.host:
+        name: "{{tem}}"
+        description: "Local Host Group"
+        inventory: "Inventory Satellite Transform"
+        state: present
+        controller_config_file: "~/tower_cli.cfg"
+        variables:
+          example_var: 123
+        controller_host: "{{ controller_hostname }}"
+        controller_username: "{{ controller_username }}"
+        controller_password: "{{ controller_password }}"
+        validate_certs: "{{ controller_validate_certs }}"
+      loop: "{{ groups['ConexionOK'] }}"
