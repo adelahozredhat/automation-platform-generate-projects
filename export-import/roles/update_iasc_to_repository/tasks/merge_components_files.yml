@@ -48,6 +48,7 @@
 
     - set_fact:
         object_new: '{"{{item.name}}": {{ item.config[item.name] | union(repo_info_controller_object[item.name]) }}}'
+        # list3: "{{ [list1, list2] | community.general.lists_mergeby('name',recursive=true) }}"
           
     - copy: content="{{ object_new | to_yaml}}" dest="repo_dest/{{item.name}}.yml"
 
